@@ -12,6 +12,7 @@ import re
 import os
 import base64
 
+from io import BytesIO
 from streamlit_option_menu import option_menu
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -59,10 +60,6 @@ data = cargar_fondo()
 st.markdown(f"""
 <style>
 
-/* =========================
-FONDO
-========================= */
-
 .stApp {{
 
     background:
@@ -74,14 +71,8 @@ FONDO
 
     background-size: cover;
     background-position: center;
-
-    background-attachment: scroll;
+    background-attachment: fixed;
 }}
-
-
-/* =========================
-OCULTAR STREAMLIT
-========================= */
 
 #MainMenu {{
     visibility: hidden;
@@ -95,34 +86,18 @@ header {{
     visibility: hidden;
 }}
 
-
-/* =========================
-SIDEBAR
-========================= */
-
 section[data-testid="stSidebar"] {{
 
     background:
-    rgba(7,11,20,0.95);
+    rgba(7,11,20,0.96);
 
     border-right:
     1px solid rgba(255,255,255,0.08);
 }}
 
-
-/* =========================
-TEXTOS
-========================= */
-
-h1,h2,h3,h4,h5,h6,label {{
-
+h1,h2,h3,h4,h5,h6,label,p,span,div {{
     color: white !important;
 }}
-
-
-/* =========================
-CARDS
-========================= */
 
 .card {{
 
@@ -141,35 +116,6 @@ CARDS
     backdrop-filter: blur(14px);
 }}
 
-
-/* =========================
-INPUTS LOGIN
-========================= */
-
-div[data-testid="stTextInput"] {{
-
-    max-width: 320px;
-
-    margin: auto;
-}}
-
-
-/* =========================
-BOTÓN LOGIN
-========================= */
-
-div[data-testid="stButton"] {{
-
-    max-width: 320px;
-
-    margin: auto;
-}}
-
-
-/* =========================
-INPUTS
-========================= */
-
 .stTextInput input {{
 
     background:
@@ -187,11 +133,6 @@ INPUTS
     padding-left: 15px !important;
 }}
 
-.stTextInput input::placeholder {{
-
-    color: #cfd8dc !important;
-}}
-
 textarea {{
 
     background:
@@ -201,11 +142,6 @@ textarea {{
 
     border-radius: 14px !important;
 }}
-
-
-/* =========================
-BOTONES
-========================= */
 
 .stButton button {{
 
@@ -225,19 +161,12 @@ BOTONES
     height: 48px;
 
     font-weight: bold;
-
-    transition: 0.3s;
 }}
 
 .stButton button:hover {{
 
     transform: scale(1.02);
 }}
-
-
-/* =========================
-MÉTRICAS
-========================= */
 
 div[data-testid="stMetric"] {{
 
@@ -252,11 +181,6 @@ div[data-testid="stMetric"] {{
     padding: 20px;
 }}
 
-
-/* =========================
-DATAFRAME
-========================= */
-
 [data-testid="stDataFrame"] {{
 
     background:
@@ -266,11 +190,6 @@ DATAFRAME
 
     padding: 10px;
 }}
-
-
-/* =========================
-LOGIN BOX
-========================= */
 
 .login-box {{
 
@@ -308,7 +227,6 @@ conn = sqlite3.connect(
 
 cursor = conn.cursor()
 
-
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS clientes(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -318,7 +236,6 @@ CREATE TABLE IF NOT EXISTS clientes(
 )
 """)
 
-
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS vacantes(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -327,7 +244,6 @@ CREATE TABLE IF NOT EXISTS vacantes(
     descripcion TEXT
 )
 """)
-
 
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS candidatos(
@@ -342,6 +258,21 @@ CREATE TABLE IF NOT EXISTS candidatos(
 )
 """)
 
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS entrevistas(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    candidato TEXT,
+    fecha TEXT
+)
+""")
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS facturas(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    cliente TEXT,
+    monto REAL
+)
+""")
 
 conn.commit()
 
@@ -475,8 +406,6 @@ if not st.session_state.login:
             type="password"
         )
 
-        st.write("")
-
         if st.button("Ingresar"):
 
             if usuario == "admin" and password == "Dios2026":
@@ -528,13 +457,6 @@ def dashboard():
 
     if ranking:
 
-        st.markdown(
-            "<div class='card'>",
-            unsafe_allow_html=True
-        )
-
-        st.subheader("🏆 Top candidatos")
-
         fig, ax = plt.subplots()
 
         ax.barh(
@@ -544,11 +466,6 @@ def dashboard():
 
         st.pyplot(fig)
 
-        st.markdown(
-            "</div>",
-            unsafe_allow_html=True
-        )
-
 
 # =========================================================
 # CLIENTES
@@ -557,11 +474,6 @@ def dashboard():
 def clientes():
 
     st.title("🏢 Clientes")
-
-    st.markdown(
-        "<div class='card'>",
-        unsafe_allow_html=True
-    )
 
     empresa = st.text_input("Empresa")
     contacto = st.text_input("Contacto")
@@ -584,14 +496,7 @@ def clientes():
 
         conn.commit()
 
-        st.success(
-            "Cliente guardado"
-        )
-
-    st.markdown(
-        "</div>",
-        unsafe_allow_html=True
-    )
+        st.success("Cliente guardado")
 
 
 # =========================================================
@@ -602,17 +507,9 @@ def vacantes():
 
     st.title("💼 Vacantes")
 
-    st.markdown(
-        "<div class='card'>",
-        unsafe_allow_html=True
-    )
-
     titulo = st.text_input("Título")
     salario = st.text_input("Salario")
-
-    descripcion = st.text_area(
-        "Descripción"
-    )
+    descripcion = st.text_area("Descripción")
 
     if st.button("Guardar Vacante"):
 
@@ -631,23 +528,51 @@ def vacantes():
 
         conn.commit()
 
-        st.success(
-            "Vacante creada"
+        st.success("Vacante creada")
+
+    st.subheader("Eliminar vacante")
+
+    vacantes_db = cursor.execute("""
+    SELECT titulo
+    FROM vacantes
+    """).fetchall()
+
+    titulos = [
+        x[0] for x in vacantes_db
+    ]
+
+    if titulos:
+
+        eliminar = st.selectbox(
+            "Selecciona vacante",
+            titulos
         )
 
-    st.markdown(
-        "</div>",
-        unsafe_allow_html=True
-    )
+        if st.button(
+            "Eliminar vacante"
+        ):
+
+            cursor.execute("""
+            DELETE FROM vacantes
+            WHERE titulo=?
+            """, (eliminar,))
+
+            conn.commit()
+
+            st.success(
+                "Vacante eliminada"
+            )
+
+            st.rerun()
 
 
 # =========================================================
-# CANDIDATOS IA
+# CANDIDATOS
 # =========================================================
 
 def candidatos():
 
-    st.title("👥 ATS Inteligencia Artificial")
+    st.title("👥 ATS IA")
 
     vacantes_db = cursor.execute("""
     SELECT id, titulo, descripcion
@@ -661,11 +586,6 @@ def candidatos():
         )
 
         return
-
-    st.markdown(
-        "<div class='card'>",
-        unsafe_allow_html=True
-    )
 
     vacante = st.selectbox(
         "Vacante",
@@ -723,16 +643,13 @@ def candidatos():
 
         conn.commit()
 
-        st.success(
-            "CV analizado correctamente"
-        )
+        st.success("CV analizado")
 
-        st.write(f"👤 Nombre: {nombre}")
-        st.write(f"📧 Correo: {correo}")
-        st.write(f"📱 Teléfono: {telefono}")
-        st.write(f"🛠 Skills: {skills}")
-        st.write(f"📈 Match IA: {score}%")
-        st.write(f"📌 Estado: {estado}")
+        st.write(f"👤 {nombre}")
+        st.write(f"📧 {correo}")
+        st.write(f"📱 {telefono}")
+        st.write(f"🛠 {skills}")
+        st.write(f"🎯 Match: {score}%")
 
     candidatos_db = cursor.execute("""
     SELECT nombre, score, estado
@@ -756,10 +673,152 @@ def candidatos():
             use_container_width=True
         )
 
-    st.markdown(
-        "</div>",
-        unsafe_allow_html=True
+        excel = BytesIO()
+
+        with pd.ExcelWriter(
+            excel,
+            engine="openpyxl"
+        ) as writer:
+
+            df.to_excel(
+                writer,
+                index=False
+            )
+
+        st.download_button(
+            "📥 Descargar Excel",
+            excel.getvalue(),
+            "candidatos.xlsx"
+        )
+
+    st.subheader("Eliminar candidato")
+
+    nombres = [
+        x[0] for x in candidatos_db
+    ]
+
+    if nombres:
+
+        eliminar = st.selectbox(
+            "Selecciona candidato",
+            nombres
+        )
+
+        if st.button(
+            "Eliminar candidato"
+        ):
+
+            cursor.execute("""
+            DELETE FROM candidatos
+            WHERE nombre=?
+            """, (eliminar,))
+
+            conn.commit()
+
+            st.success(
+                "Candidato eliminado"
+            )
+
+            st.rerun()
+
+
+# =========================================================
+# ENTREVISTAS
+# =========================================================
+
+def entrevistas():
+
+    st.title("📅 Entrevistas")
+
+    candidato = st.text_input(
+        "Nombre candidato"
     )
+
+    fecha = st.date_input(
+        "Fecha entrevista"
+    )
+
+    if st.button(
+        "Guardar entrevista"
+    ):
+
+        cursor.execute("""
+        INSERT INTO entrevistas(
+            candidato,
+            fecha
+        )
+        VALUES(?,?)
+        """, (
+            candidato,
+            str(fecha)
+        ))
+
+        conn.commit()
+
+        st.success(
+            "Entrevista agendada"
+        )
+
+    entrevistas_db = cursor.execute("""
+    SELECT *
+    FROM entrevistas
+    """).fetchall()
+
+    for entrevista in entrevistas_db:
+
+        st.write(
+            f"👤 {entrevista[1]} | 📅 {entrevista[2]}"
+        )
+
+
+# =========================================================
+# CONTABILIDAD
+# =========================================================
+
+def contabilidad():
+
+    st.title("💰 Contabilidad")
+
+    cliente = st.text_input(
+        "Cliente"
+    )
+
+    monto = st.number_input(
+        "Monto",
+        min_value=0.0
+    )
+
+    if st.button(
+        "Guardar Factura"
+    ):
+
+        cursor.execute("""
+        INSERT INTO facturas(
+            cliente,
+            monto
+        )
+        VALUES(?,?)
+        """, (
+            cliente,
+            monto
+        ))
+
+        conn.commit()
+
+        st.success(
+            "Factura guardada"
+        )
+
+    facturas = cursor.execute("""
+    SELECT *
+    FROM facturas
+    """).fetchall()
+
+    for factura in facturas:
+
+        st.write(
+            f"🧾 {factura[1]} - ${factura[2]}"
+        )
 
 
 # =========================================================
@@ -778,11 +837,6 @@ def reportes():
 
     if datos:
 
-        st.markdown(
-            "<div class='card'>",
-            unsafe_allow_html=True
-        )
-
         fig, ax = plt.subplots()
 
         ax.pie(
@@ -791,11 +845,6 @@ def reportes():
         )
 
         st.pyplot(fig)
-
-        st.markdown(
-            "</div>",
-            unsafe_allow_html=True
-        )
 
 
 # =========================================================
@@ -827,6 +876,8 @@ with st.sidebar:
             "Clientes",
             "Vacantes",
             "Candidatos",
+            "Entrevistas",
+            "Contabilidad",
             "Reportes",
             "Configuración"
         ],
@@ -835,6 +886,8 @@ with st.sidebar:
             "building",
             "briefcase",
             "people",
+            "calendar",
+            "cash-stack",
             "bar-chart",
             "gear"
         ],
@@ -858,6 +911,12 @@ elif menu == "Vacantes":
 
 elif menu == "Candidatos":
     candidatos()
+
+elif menu == "Entrevistas":
+    entrevistas()
+
+elif menu == "Contabilidad":
+    contabilidad()
 
 elif menu == "Reportes":
     reportes()
