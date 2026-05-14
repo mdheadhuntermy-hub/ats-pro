@@ -12,7 +12,6 @@ import re
 import os
 import base64
 
-from io import BytesIO
 from streamlit_option_menu import option_menu
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -33,17 +32,24 @@ st.set_page_config(
 # CARGAR FONDO
 # =========================================================
 
-ruta_fondo = "fondo.jpg"
+def cargar_fondo():
 
-if os.path.exists(ruta_fondo):
+    ruta = "fondo.jpg"
 
-    with open(ruta_fondo, "rb") as f:
-        data = base64.b64encode(
-            f.read()
-        ).decode()
+    if os.path.exists(ruta):
 
-else:
-    data = ""
+        with open(ruta, "rb") as f:
+
+            data = base64.b64encode(
+                f.read()
+            ).decode()
+
+        return data
+
+    return ""
+
+
+data = cargar_fondo()
 
 
 # =========================================================
@@ -54,21 +60,22 @@ st.markdown(f"""
 <style>
 
 /* =========================
-FONDO GENERAL
+FONDO
 ========================= */
 
 .stApp {{
 
     background:
     linear-gradient(
-        rgba(5,10,20,0.82),
-        rgba(5,10,20,0.82)
+        rgba(5,10,20,0.86),
+        rgba(5,10,20,0.86)
     ),
     url("data:image/jpg;base64,{data}");
 
     background-size: cover;
     background-position: center;
-    background-attachment: fixed;
+
+    background-attachment: scroll;
 }}
 
 
@@ -96,7 +103,7 @@ SIDEBAR
 section[data-testid="stSidebar"] {{
 
     background:
-    rgba(8,12,20,0.96);
+    rgba(7,11,20,0.95);
 
     border-right:
     1px solid rgba(255,255,255,0.08);
@@ -107,11 +114,8 @@ section[data-testid="stSidebar"] {{
 TEXTOS
 ========================= */
 
-h1,h2,h3,h4,h5,h6 {{
-    color: white !important;
-}}
+h1,h2,h3,h4,h5,h6,label {{
 
-p,label,div,span {{
     color: white !important;
 }}
 
@@ -128,13 +132,37 @@ CARDS
     border:
     1px solid rgba(255,255,255,0.08);
 
-    border-radius: 20px;
+    border-radius: 22px;
 
     padding: 30px;
 
-    backdrop-filter: blur(12px);
-
     margin-bottom: 25px;
+
+    backdrop-filter: blur(14px);
+}}
+
+
+/* =========================
+INPUTS LOGIN
+========================= */
+
+div[data-testid="stTextInput"] {{
+
+    max-width: 320px;
+
+    margin: auto;
+}}
+
+
+/* =========================
+BOTÓN LOGIN
+========================= */
+
+div[data-testid="stButton"] {{
+
+    max-width: 320px;
+
+    margin: auto;
 }}
 
 
@@ -145,26 +173,33 @@ INPUTS
 .stTextInput input {{
 
     background:
-    rgba(255,255,255,0.06) !important;
+    rgba(255,255,255,0.08) !important;
 
     color: white !important;
 
-    border-radius: 12px !important;
-
     border:
-    1px solid rgba(255,255,255,0.08) !important;
+    1px solid rgba(255,255,255,0.10) !important;
 
-    height: 48px;
+    border-radius: 14px !important;
+
+    height: 48px !important;
+
+    padding-left: 15px !important;
+}}
+
+.stTextInput input::placeholder {{
+
+    color: #cfd8dc !important;
 }}
 
 textarea {{
 
     background:
-    rgba(255,255,255,0.06) !important;
+    rgba(255,255,255,0.08) !important;
 
     color: white !important;
 
-    border-radius: 12px !important;
+    border-radius: 14px !important;
 }}
 
 
@@ -181,15 +216,13 @@ BOTONES
         #007BFF
     );
 
-    color: white;
+    color: white !important;
 
     border: none;
 
-    border-radius: 12px;
+    border-radius: 14px;
 
-    height: 50px;
-
-    font-size: 17px;
+    height: 48px;
 
     font-weight: bold;
 
@@ -211,17 +244,17 @@ div[data-testid="stMetric"] {{
     background:
     rgba(255,255,255,0.05);
 
-    padding: 20px;
+    border:
+    1px solid rgba(255,255,255,0.08);
 
     border-radius: 18px;
 
-    border:
-    1px solid rgba(255,255,255,0.08);
+    padding: 20px;
 }}
 
 
 /* =========================
-TABLAS
+DATAFRAME
 ========================= */
 
 [data-testid="stDataFrame"] {{
@@ -229,48 +262,33 @@ TABLAS
     background:
     rgba(255,255,255,0.04);
 
-    border-radius: 15px;
+    border-radius: 18px;
 
     padding: 10px;
 }}
 
 
 /* =========================
-LOGIN
+LOGIN BOX
 ========================= */
 
 .login-box {{
-/* LOGIN INPUTS MÁS PEQUEÑOS */
-
-div[data-testid="stTextInput"] {
-
-    max-width: 320px;
-
-    margin: auto;
-}
-
-div[data-testid="stButton"] {
-
-    max-width: 320px;
-
-    margin: auto;
-}
 
     background:
-    rgba(10,15,25,0.90);
-
-    border-radius: 25px;
-
-    padding: 50px;
-
-    max-width: 520px;
-
-    margin: auto;
-
-    margin-top: 100px;
+    rgba(10,15,25,0.92);
 
     border:
     1px solid rgba(255,255,255,0.08);
+
+    border-radius: 24px;
+
+    padding: 45px;
+
+    max-width: 500px;
+
+    margin: auto;
+
+    margin-top: 80px;
 
     backdrop-filter: blur(20px);
 }}
@@ -429,15 +447,14 @@ if not st.session_state.login:
     st.markdown("""
     <div class="login-box">
 
-    <h1 style='text-align:center; margin-bottom:10px;'>
+    <h1 style='text-align:center;'>
     🚀 ATS PRO ELITE
     </h1>
 
     <p style='
     text-align:center;
-    color:#cfcfcf;
-    margin-bottom:35px;
-    font-size:18px;
+    color:#cfd8dc;
+    margin-bottom:30px;
     '>
     Inteligencia Artificial para Reclutamiento
     </p>
@@ -445,7 +462,6 @@ if not st.session_state.login:
     </div>
     """, unsafe_allow_html=True)
 
-    # CENTRAR LOGIN
     c1, c2, c3 = st.columns([1.5,1,1.5])
 
     with c2:
@@ -499,20 +515,9 @@ def dashboard():
 
     c1, c2, c3 = st.columns(3)
 
-    c1.metric(
-        "Clientes",
-        total_clientes
-    )
-
-    c2.metric(
-        "Vacantes",
-        total_vacantes
-    )
-
-    c3.metric(
-        "Candidatos",
-        total_candidatos
-    )
+    c1.metric("Clientes", total_clientes)
+    c2.metric("Vacantes", total_vacantes)
+    c3.metric("Candidatos", total_candidatos)
 
     ranking = cursor.execute("""
     SELECT nombre, score
@@ -528,9 +533,7 @@ def dashboard():
             unsafe_allow_html=True
         )
 
-        st.subheader(
-            "🏆 Top candidatos"
-        )
+        st.subheader("🏆 Top candidatos")
 
         fig, ax = plt.subplots()
 
@@ -560,21 +563,11 @@ def clientes():
         unsafe_allow_html=True
     )
 
-    empresa = st.text_input(
-        "Empresa"
-    )
+    empresa = st.text_input("Empresa")
+    contacto = st.text_input("Contacto")
+    correo = st.text_input("Correo")
 
-    contacto = st.text_input(
-        "Contacto"
-    )
-
-    correo = st.text_input(
-        "Correo"
-    )
-
-    if st.button(
-        "Guardar Cliente"
-    ):
+    if st.button("Guardar Cliente"):
 
         cursor.execute("""
         INSERT INTO clientes(
@@ -614,21 +607,14 @@ def vacantes():
         unsafe_allow_html=True
     )
 
-    titulo = st.text_input(
-        "Título"
-    )
-
-    salario = st.text_input(
-        "Salario"
-    )
+    titulo = st.text_input("Título")
+    salario = st.text_input("Salario")
 
     descripcion = st.text_area(
         "Descripción"
     )
 
-    if st.button(
-        "Guardar Vacante"
-    ):
+    if st.button("Guardar Vacante"):
 
         cursor.execute("""
         INSERT INTO vacantes(
@@ -656,7 +642,7 @@ def vacantes():
 
 
 # =========================================================
-# ATS IA
+# CANDIDATOS IA
 # =========================================================
 
 def candidatos():
@@ -697,11 +683,8 @@ def candidatos():
         texto = leer_pdf(archivo)
 
         nombre = extraer_nombre(texto)
-
         correo = extraer_correo(texto)
-
         telefono = extraer_telefono(texto)
-
         skills = detectar_skills(texto)
 
         score = calcular_match(
