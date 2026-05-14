@@ -1,4 +1,34 @@
+import base64
+def set_bg():
+    with open("fondo.jpg", "rb") as f:
+        data = base64.b64encode(f.read()).decode()
+
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+            background-image: url("data:image/jpg;base64,{data}");
+            background-size: cover;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+set_bg()
 import streamlit as st
+st.markdown("""
+<style>
+.stButton>button {
+    background-color: #0A66C2;
+    color: white;
+    border-radius: 10px;
+    height: 50px;
+    width: 100%;
+    font-size: 18px;
+}
+</style>
+""", unsafe_allow_html=True)
 import pandas as pd
 import sqlite3
 import matplotlib.pyplot as plt
@@ -669,6 +699,7 @@ if 'login' not in st.session_state:
     st.session_state.login = False
 
 if not st.session_state.login:
+    st.image("logo.png", width=200)
     st.title('🚀 ATS PRO')
 
     usuario = st.text_input('Usuario')
