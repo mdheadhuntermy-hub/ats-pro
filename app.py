@@ -4,22 +4,6 @@
 # =========================================================
 
 import streamlit as st
-
-def set_bg():
-    st.markdown(
-        """
-        <style>
-        .block-container {
-            max-width: 1100px;
-            padding-top: 2rem;
-            padding-bottom: 2rem;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
-set_bg()
 import pandas as pd
 import sqlite3
 import matplotlib.pyplot as plt
