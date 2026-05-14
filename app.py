@@ -1,6 +1,14 @@
+import os
 import base64
+
 def set_bg():
-    with open("fondo.jpg", "rb") as f:
+
+    ruta_fondo = os.path.join(
+        os.path.dirname(__file__),
+        "fondo.jpg"
+    )
+
+    with open(ruta_fondo, "rb") as f:
         data = base64.b64encode(f.read()).decode()
 
     st.markdown(
