@@ -60,12 +60,15 @@ data = cargar_fondo()
 st.markdown(f"""
 <style>
 
-.stApp {{
+/* =========================
+FONDO
+========================= */
 
+.stApp {{
     background:
     linear-gradient(
-        rgba(5,10,20,0.86),
-        rgba(5,10,20,0.86)
+        rgba(2,6,23,0.88),
+        rgba(2,6,23,0.88)
     ),
     url("data:image/jpg;base64,{data}");
 
@@ -73,6 +76,11 @@ st.markdown(f"""
     background-position: center;
     background-attachment: fixed;
 }}
+
+
+/* =========================
+OCULTAR STREAMLIT
+========================= */
 
 #MainMenu {{
     visibility: hidden;
@@ -86,62 +94,106 @@ header {{
     visibility: hidden;
 }}
 
+
+/* =========================
+SIDEBAR
+========================= */
+
 section[data-testid="stSidebar"] {{
 
     background:
-    rgba(7,11,20,0.96);
+    rgba(5,10,20,0.95);
 
     border-right:
     1px solid rgba(255,255,255,0.08);
 }}
 
-h1,h2,h3,h4,h5,h6,label,p,span,div {{
+
+/* =========================
+TEXTOS
+========================= */
+
+h1,h2,h3,h4,h5,h6 {{
     color: white !important;
 }}
 
-.card {{
-
-    background:
-    rgba(255,255,255,0.05);
-
-    border:
-    1px solid rgba(255,255,255,0.08);
-
-    border-radius: 22px;
-
-    padding: 30px;
-
-    margin-bottom: 25px;
-
-    backdrop-filter: blur(14px);
+label {{
+    color: white !important;
 }}
 
-.stTextInput input {{
+p,span,div {{
+    color: white;
+}}
 
-    background:
+
+/* =========================
+INPUTS
+========================= */
+
+.stTextInput > div > div > input {{
+
+    background-color:
     rgba(255,255,255,0.08) !important;
 
     color: white !important;
 
-    border:
-    1px solid rgba(255,255,255,0.10) !important;
+    border-radius: 12px !important;
 
-    border-radius: 14px !important;
+    border:
+    1px solid rgba(255,255,255,0.12) !important;
 
     height: 48px !important;
 
     padding-left: 15px !important;
+
+    font-size: 16px !important;
 }}
+
+
+/* PLACEHOLDER */
+
+.stTextInput input::placeholder {{
+    color: #cccccc !important;
+}}
+
+
+/* PASSWORD */
+
+input[type="password"] {{
+    color: white !important;
+}}
+
+
+/* TEXTAREA */
 
 textarea {{
 
-    background:
+    background-color:
     rgba(255,255,255,0.08) !important;
 
     color: white !important;
 
-    border-radius: 14px !important;
+    border-radius: 12px !important;
+
+    border:
+    1px solid rgba(255,255,255,0.12) !important;
 }}
+
+
+/* SELECTBOX */
+
+.stSelectbox div[data-baseweb="select"] > div {{
+
+    background-color:
+    rgba(255,255,255,0.08) !important;
+
+    color: white !important;
+
+    border-radius: 12px !important;
+}}
+
+
+/* BOTONES */
 
 .stButton button {{
 
@@ -156,19 +208,101 @@ textarea {{
 
     border: none;
 
-    border-radius: 14px;
+    border-radius: 12px;
 
     height: 48px;
 
+    font-size: 16px;
+
     font-weight: bold;
+
+    transition: 0.3s;
 }}
 
 .stButton button:hover {{
 
     transform: scale(1.02);
+
+    box-shadow:
+    0 0 15px rgba(0,123,255,0.5);
 }}
 
+
+/* MÉTRICAS */
+
 div[data-testid="stMetric"] {{
+
+    background:
+    rgba(255,255,255,0.05);
+
+    padding: 20px;
+
+    border-radius: 20px;
+
+    border:
+    1px solid rgba(255,255,255,0.08);
+
+    backdrop-filter: blur(10px);
+}}
+
+
+/* DATAFRAME */
+
+[data-testid="stDataFrame"] {{
+
+    background:
+    rgba(255,255,255,0.04);
+
+    border-radius: 15px;
+
+    padding: 10px;
+}}
+
+
+/* LOGIN */
+
+.login-box {{
+
+    background:
+    rgba(10,15,25,0.88);
+
+    border-radius: 25px;
+
+    padding: 45px;
+
+    max-width: 420px;
+
+    margin: auto;
+
+    margin-top: 80px;
+
+    border:
+    1px solid rgba(255,255,255,0.08);
+
+    backdrop-filter: blur(20px);
+}}
+
+
+/* LOGIN INPUTS */
+
+div[data-testid="stTextInput"] {{
+
+    max-width: 320px;
+
+    margin: auto;
+}}
+
+div[data-testid="stButton"] {{
+
+    max-width: 320px;
+
+    margin: auto;
+}}
+
+
+/* CARD */
+
+.card {{
 
     background:
     rgba(255,255,255,0.05);
@@ -176,40 +310,13 @@ div[data-testid="stMetric"] {{
     border:
     1px solid rgba(255,255,255,0.08);
 
-    border-radius: 18px;
+    border-radius: 20px;
 
-    padding: 20px;
-}}
+    padding: 25px;
 
-[data-testid="stDataFrame"] {{
+    backdrop-filter: blur(10px);
 
-    background:
-    rgba(255,255,255,0.04);
-
-    border-radius: 18px;
-
-    padding: 10px;
-}}
-
-.login-box {{
-
-    background:
-    rgba(10,15,25,0.92);
-
-    border:
-    1px solid rgba(255,255,255,0.08);
-
-    border-radius: 24px;
-
-    padding: 45px;
-
-    max-width: 500px;
-
-    margin: auto;
-
-    margin-top: 80px;
-
-    backdrop-filter: blur(20px);
+    margin-bottom: 25px;
 }}
 
 </style>
