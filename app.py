@@ -1,6 +1,7 @@
-# =========================================
-# ATS PRO 7.0 - STREAMLIT
-# =========================================
+# =========================================================
+# ATS PRO ELITE 2025
+# SISTEMA IA RECLUTAMIENTO
+# =========================================================
 
 import streamlit as st
 import pandas as pd
@@ -17,105 +18,255 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 
-# =========================================
-# CONFIGURACIÓN GENERAL
-# =========================================
+# =========================================================
+# CONFIGURACIÓN
+# =========================================================
 
 st.set_page_config(
-    page_title="ATS PRO 7.0",
+    page_title="ATS PRO ELITE",
     page_icon="🚀",
     layout="wide"
 )
 
 
-# =========================================
-# FONDO
-# =========================================
+# =========================================================
+# CARGAR FONDO
+# =========================================================
 
-def set_bg():
+ruta_fondo = "fondo.jpg"
 
-    ruta_fondo = os.path.join(
-        os.path.dirname(__file__),
-        "fondo.jpg"
-    )
+if os.path.exists(ruta_fondo):
 
-    if os.path.exists(ruta_fondo):
+    with open(ruta_fondo, "rb") as f:
+        data = base64.b64encode(
+            f.read()
+        ).decode()
 
-        with open(ruta_fondo, "rb") as f:
-            data = base64.b64encode(f.read()).decode()
-
-        st.markdown(
-            f"""
-            <style>
-
-            .stApp {{
-                background-image: url("data:image/jpg;base64,{data}");
-                background-size: cover;
-                background-position: center;
-                background-repeat: no-repeat;
-                background-attachment: fixed;
-            }}
-
-            .main {{
-                background-color: rgba(0,0,0,0.35);
-                padding: 20px;
-                border-radius: 15px;
-            }}
-
-            </style>
-            """,
-            unsafe_allow_html=True
-        )
-
-set_bg()
+else:
+    data = ""
 
 
-# =========================================
-# ESTILOS
-# =========================================
+# =========================================================
+# CSS PROFESIONAL
+# =========================================================
 
-st.markdown("""
+st.markdown(f"""
 <style>
 
-h1, h2, h3, h4, h5, h6 {
+/* =========================
+FONDO GENERAL
+========================= */
+
+.stApp {{
+
+    background:
+    linear-gradient(
+        rgba(5,10,20,0.82),
+        rgba(5,10,20,0.82)
+    ),
+    url("data:image/jpg;base64,{data}");
+
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}}
+
+
+/* =========================
+OCULTAR STREAMLIT
+========================= */
+
+#MainMenu {{
+    visibility: hidden;
+}}
+
+footer {{
+    visibility: hidden;
+}}
+
+header {{
+    visibility: hidden;
+}}
+
+
+/* =========================
+SIDEBAR
+========================= */
+
+section[data-testid="stSidebar"] {{
+
+    background:
+    rgba(8,12,20,0.96);
+
+    border-right:
+    1px solid rgba(255,255,255,0.08);
+}}
+
+
+/* =========================
+TEXTOS
+========================= */
+
+h1,h2,h3,h4,h5,h6 {{
     color: white !important;
-}
+}}
 
-p, label, div {
+p,label,div,span {{
     color: white !important;
-}
+}}
 
-.stMetric {
-    background: rgba(255,255,255,0.1);
-    padding: 15px;
-    border-radius: 15px;
-}
 
-.stButton>button {
-    background-color: #0A66C2;
+/* =========================
+CARDS
+========================= */
+
+.card {{
+
+    background:
+    rgba(255,255,255,0.05);
+
+    border:
+    1px solid rgba(255,255,255,0.08);
+
+    border-radius: 20px;
+
+    padding: 30px;
+
+    backdrop-filter: blur(12px);
+
+    margin-bottom: 25px;
+}}
+
+
+/* =========================
+INPUTS
+========================= */
+
+.stTextInput input {{
+
+    background:
+    rgba(255,255,255,0.06) !important;
+
+    color: white !important;
+
+    border-radius: 12px !important;
+
+    border:
+    1px solid rgba(255,255,255,0.08) !important;
+
+    height: 48px;
+}}
+
+textarea {{
+
+    background:
+    rgba(255,255,255,0.06) !important;
+
+    color: white !important;
+
+    border-radius: 12px !important;
+}}
+
+
+/* =========================
+BOTONES
+========================= */
+
+.stButton button {{
+
+    background:
+    linear-gradient(
+        90deg,
+        #0A66C2,
+        #007BFF
+    );
+
     color: white;
-    border-radius: 10px;
-    height: 50px;
-    width: 100%;
-    font-size: 18px;
+
     border: none;
-}
 
-.stTextInput>div>div>input {
-    border-radius: 10px;
-}
+    border-radius: 12px;
 
-textarea {
-    border-radius: 10px !important;
-}
+    height: 50px;
+
+    font-size: 17px;
+
+    font-weight: bold;
+
+    transition: 0.3s;
+}}
+
+.stButton button:hover {{
+
+    transform: scale(1.02);
+}}
+
+
+/* =========================
+MÉTRICAS
+========================= */
+
+div[data-testid="stMetric"] {{
+
+    background:
+    rgba(255,255,255,0.05);
+
+    padding: 20px;
+
+    border-radius: 18px;
+
+    border:
+    1px solid rgba(255,255,255,0.08);
+}}
+
+
+/* =========================
+TABLAS
+========================= */
+
+[data-testid="stDataFrame"] {{
+
+    background:
+    rgba(255,255,255,0.04);
+
+    border-radius: 15px;
+
+    padding: 10px;
+}}
+
+
+/* =========================
+LOGIN
+========================= */
+
+.login-box {{
+
+    background:
+    rgba(10,15,25,0.90);
+
+    border-radius: 25px;
+
+    padding: 50px;
+
+    max-width: 520px;
+
+    margin: auto;
+
+    margin-top: 100px;
+
+    border:
+    1px solid rgba(255,255,255,0.08);
+
+    backdrop-filter: blur(20px);
+}}
 
 </style>
 """, unsafe_allow_html=True)
 
 
-# =========================================
+# =========================================================
 # BASE DE DATOS
-# =========================================
+# =========================================================
 
 conn = sqlite3.connect(
     "atspro.db",
@@ -159,30 +310,12 @@ CREATE TABLE IF NOT EXISTS candidatos(
 """)
 
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS facturas(
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    cliente TEXT,
-    monto REAL
-)
-""")
-
-
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS entrevistas(
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    candidato TEXT,
-    fecha TEXT
-)
-""")
-
-
 conn.commit()
 
 
-# =========================================
-# FUNCIONES PDF
-# =========================================
+# =========================================================
+# FUNCIONES IA
+# =========================================================
 
 def leer_pdf(pdf_file):
 
@@ -238,11 +371,10 @@ def detectar_skills(texto):
         "javascript",
         "sap",
         "rh",
-        "reclutamiento",
         "ventas",
+        "reclutamiento",
         "english",
-        "liderazgo",
-        "autocad"
+        "liderazgo"
     ]
 
     encontrados = [
@@ -269,38 +401,72 @@ def calcular_match(vacante, cv):
     return int(similitud * 100)
 
 
-def analizar_cv(texto, score):
+# =========================================================
+# LOGIN
+# =========================================================
 
-    texto = texto.lower()
-
-    experiencia = len(
-        re.findall(r'\d+\s*(años|anos)', texto)
-    )
-
-    idiomas = []
-
-    if "english" in texto or "ingles" in texto:
-        idiomas.append("Inglés")
-
-    if score >= 80:
-        recomendacion = "🟢 Recomendado"
-
-    elif score >= 60:
-        recomendacion = "🟡 Revisar"
-
-    else:
-        recomendacion = "🔴 No recomendado"
-
-    return experiencia, idiomas, recomendacion
+if "login" not in st.session_state:
+    st.session_state.login = False
 
 
-# =========================================
+if not st.session_state.login:
+
+    st.markdown("""
+    <div class="login-box">
+
+    <h1 style='text-align:center;'>
+    🚀 ATS PRO ELITE
+    </h1>
+
+    <h4 style='
+    text-align:center;
+    color:#cfcfcf;
+    margin-bottom:30px;
+    '>
+    Inteligencia Artificial para Reclutamiento
+    </h4>
+
+    </div>
+    """, unsafe_allow_html=True)
+
+    col1, col2, col3 = st.columns([1,2,1])
+
+    with col2:
+
+        usuario = st.text_input(
+            "👤 Usuario"
+        )
+
+        password = st.text_input(
+            "🔒 Contraseña",
+            type="password"
+        )
+
+        st.write("")
+
+        if st.button("Ingresar"):
+
+            if usuario == "admin" and password == "Dios2026":
+
+                st.session_state.login = True
+                st.rerun()
+
+            else:
+
+                st.error(
+                    "Usuario incorrecto"
+                )
+
+    st.stop()
+
+
+# =========================================================
 # DASHBOARD
-# =========================================
+# =========================================================
 
-def mostrar_dashboard():
+def dashboard():
 
-    st.title("📊 Dashboard ATS")
+    st.title("📊 Dashboard Ejecutivo")
 
     total_clientes = cursor.execute(
         "SELECT COUNT(*) FROM clientes"
@@ -331,8 +497,6 @@ def mostrar_dashboard():
         total_candidatos
     )
 
-    st.subheader("🏆 Top candidatos")
-
     ranking = cursor.execute("""
     SELECT nombre, score
     FROM candidatos
@@ -341,6 +505,15 @@ def mostrar_dashboard():
     """).fetchall()
 
     if ranking:
+
+        st.markdown(
+            "<div class='card'>",
+            unsafe_allow_html=True
+        )
+
+        st.subheader(
+            "🏆 Top candidatos"
+        )
 
         fig, ax = plt.subplots()
 
@@ -351,20 +524,40 @@ def mostrar_dashboard():
 
         st.pyplot(fig)
 
+        st.markdown(
+            "</div>",
+            unsafe_allow_html=True
+        )
 
-# =========================================
+
+# =========================================================
 # CLIENTES
-# =========================================
+# =========================================================
 
-def mostrar_clientes():
+def clientes():
 
     st.title("🏢 Clientes")
 
-    empresa = st.text_input("Empresa")
-    contacto = st.text_input("Contacto")
-    correo = st.text_input("Correo")
+    st.markdown(
+        "<div class='card'>",
+        unsafe_allow_html=True
+    )
 
-    if st.button("Guardar Cliente"):
+    empresa = st.text_input(
+        "Empresa"
+    )
+
+    contacto = st.text_input(
+        "Contacto"
+    )
+
+    correo = st.text_input(
+        "Correo"
+    )
+
+    if st.button(
+        "Guardar Cliente"
+    ):
 
         cursor.execute("""
         INSERT INTO clientes(
@@ -381,22 +574,44 @@ def mostrar_clientes():
 
         conn.commit()
 
-        st.success("Cliente guardado")
+        st.success(
+            "Cliente guardado"
+        )
+
+    st.markdown(
+        "</div>",
+        unsafe_allow_html=True
+    )
 
 
-# =========================================
+# =========================================================
 # VACANTES
-# =========================================
+# =========================================================
 
-def mostrar_vacantes():
+def vacantes():
 
     st.title("💼 Vacantes")
 
-    titulo = st.text_input("Título")
-    salario = st.text_input("Salario")
-    descripcion = st.text_area("Descripción")
+    st.markdown(
+        "<div class='card'>",
+        unsafe_allow_html=True
+    )
 
-    if st.button("Guardar Vacante"):
+    titulo = st.text_input(
+        "Título"
+    )
+
+    salario = st.text_input(
+        "Salario"
+    )
+
+    descripcion = st.text_area(
+        "Descripción"
+    )
+
+    if st.button(
+        "Guardar Vacante"
+    ):
 
         cursor.execute("""
         INSERT INTO vacantes(
@@ -413,23 +628,30 @@ def mostrar_vacantes():
 
         conn.commit()
 
-        st.success("Vacante creada")
+        st.success(
+            "Vacante creada"
+        )
+
+    st.markdown(
+        "</div>",
+        unsafe_allow_html=True
+    )
 
 
-# =========================================
+# =========================================================
 # ATS IA
-# =========================================
+# =========================================================
 
-def mostrar_candidatos():
+def candidatos():
 
-    st.title("👥 ATS IA")
+    st.title("👥 ATS Inteligencia Artificial")
 
-    vacantes = cursor.execute("""
+    vacantes_db = cursor.execute("""
     SELECT id, titulo, descripcion
     FROM vacantes
     """).fetchall()
 
-    if not vacantes:
+    if not vacantes_db:
 
         st.warning(
             "Primero crea una vacante"
@@ -437,9 +659,14 @@ def mostrar_candidatos():
 
         return
 
+    st.markdown(
+        "<div class='card'>",
+        unsafe_allow_html=True
+    )
+
     vacante = st.selectbox(
         "Vacante",
-        vacantes,
+        vacantes_db,
         format_func=lambda x: x[1]
     )
 
@@ -453,18 +680,16 @@ def mostrar_candidatos():
         texto = leer_pdf(archivo)
 
         nombre = extraer_nombre(texto)
+
         correo = extraer_correo(texto)
+
         telefono = extraer_telefono(texto)
+
         skills = detectar_skills(texto)
 
         score = calcular_match(
             vacante[2],
             texto
-        )
-
-        experiencia, idiomas, recomendacion = analizar_cv(
-            texto,
-            score
         )
 
         estado = "Filtro RH"
@@ -475,67 +700,54 @@ def mostrar_candidatos():
         elif score < 60:
             estado = "Rechazado"
 
-        existe = cursor.execute("""
-        SELECT id
-        FROM candidatos
-        WHERE correo=?
-        """, (correo,)).fetchone()
+        cursor.execute("""
+        INSERT INTO candidatos(
+            nombre,
+            correo,
+            telefono,
+            skills,
+            score,
+            estado,
+            vacante
+        )
+        VALUES(?,?,?,?,?,?,?)
+        """, (
+            nombre,
+            correo,
+            telefono,
+            skills,
+            score,
+            estado,
+            vacante[1]
+        ))
 
-        if not existe:
+        conn.commit()
 
-            cursor.execute("""
-            INSERT INTO candidatos(
-                nombre,
-                correo,
-                telefono,
-                skills,
-                score,
-                estado,
-                vacante
-            )
-            VALUES(?,?,?,?,?,?,?)
-            """, (
-                nombre,
-                correo,
-                telefono,
-                skills,
-                score,
-                estado,
-                vacante[1]
-            ))
-
-            conn.commit()
-
-        st.subheader("📄 Resultado IA")
+        st.success(
+            "CV analizado correctamente"
+        )
 
         st.write(f"👤 Nombre: {nombre}")
         st.write(f"📧 Correo: {correo}")
         st.write(f"📱 Teléfono: {telefono}")
         st.write(f"🛠 Skills: {skills}")
-        st.write(f"📈 Match: {score}%")
-        st.write(f"🌎 Idiomas: {idiomas}")
-        st.write(f"🧠 IA: {recomendacion}")
+        st.write(f"📈 Match IA: {score}%")
+        st.write(f"📌 Estado: {estado}")
 
-    candidatos = cursor.execute("""
-    SELECT *
+    candidatos_db = cursor.execute("""
+    SELECT nombre, score, estado
     FROM candidatos
-    WHERE vacante=?
     ORDER BY score DESC
-    """, (vacante[1],)).fetchall()
+    """).fetchall()
 
-    if candidatos:
+    if candidatos_db:
 
         df = pd.DataFrame(
-            candidatos,
+            candidatos_db,
             columns=[
-                "ID",
                 "Nombre",
-                "Correo",
-                "Telefono",
-                "Skills",
                 "Score",
-                "Estado",
-                "Vacante"
+                "Estado"
             ]
         )
 
@@ -544,137 +756,19 @@ def mostrar_candidatos():
             use_container_width=True
         )
 
-        excel_buffer = BytesIO()
-
-        with pd.ExcelWriter(
-            excel_buffer,
-            engine="openpyxl"
-        ) as writer:
-
-            df.to_excel(
-                writer,
-                index=False
-            )
-
-        st.download_button(
-            "📥 Descargar Excel",
-            excel_buffer.getvalue(),
-            "candidatos.xlsx"
-        )
-
-
-# =========================================
-# ENTREVISTAS
-# =========================================
-
-def mostrar_entrevistas():
-
-    st.title("📅 Entrevistas")
-
-    candidato = st.text_input(
-        "Nombre candidato"
+    st.markdown(
+        "</div>",
+        unsafe_allow_html=True
     )
 
-    fecha = st.date_input(
-        "Fecha entrevista"
-    )
 
-    if st.button(
-        "Guardar entrevista"
-    ):
-
-        cursor.execute("""
-        INSERT INTO entrevistas(
-            candidato,
-            fecha
-        )
-        VALUES(?,?)
-        """, (
-            candidato,
-            str(fecha)
-        ))
-
-        conn.commit()
-
-        st.success(
-            "Entrevista agendada"
-        )
-
-    entrevistas = cursor.execute("""
-    SELECT *
-    FROM entrevistas
-    """).fetchall()
-
-    for entrevista in entrevistas:
-
-        st.write(
-            f"👤 {entrevista[1]} | 📅 {entrevista[2]}"
-        )
-
-
-# =========================================
-# CONTABILIDAD
-# =========================================
-
-def mostrar_contabilidad():
-
-    st.title("💰 Contabilidad")
-
-    cliente = st.text_input("Cliente")
-
-    monto = st.number_input(
-        "Monto",
-        min_value=0.0
-    )
-
-    if st.button(
-        "Guardar Factura"
-    ):
-
-        cursor.execute("""
-        INSERT INTO facturas(
-            cliente,
-            monto
-        )
-        VALUES(?,?)
-        """, (
-            cliente,
-            monto
-        ))
-
-        conn.commit()
-
-    facturas = cursor.execute("""
-    SELECT *
-    FROM facturas
-    """).fetchall()
-
-    for factura in facturas:
-
-        st.write(
-            f"🧾 {factura[1]} - ${factura[2]}"
-        )
-
-
-# =========================================
+# =========================================================
 # REPORTES
-# =========================================
+# =========================================================
 
-def mostrar_reportes():
+def reportes():
 
     st.title("📈 Reportes")
-
-    total = cursor.execute("""
-    SELECT SUM(monto)
-    FROM facturas
-    """).fetchone()[0]
-
-    total = total if total else 0
-
-    st.metric(
-        "Ingresos",
-        f"${total}"
-    )
 
     datos = cursor.execute("""
     SELECT estado, COUNT(*)
@@ -683,6 +777,11 @@ def mostrar_reportes():
     """).fetchall()
 
     if datos:
+
+        st.markdown(
+            "<div class='card'>",
+            unsafe_allow_html=True
+        )
 
         fig, ax = plt.subplots()
 
@@ -693,12 +792,17 @@ def mostrar_reportes():
 
         st.pyplot(fig)
 
+        st.markdown(
+            "</div>",
+            unsafe_allow_html=True
+        )
 
-# =========================================
+
+# =========================================================
 # CONFIGURACIÓN
-# =========================================
+# =========================================================
 
-def mostrar_configuracion():
+def configuracion():
 
     st.title("⚙️ Configuración")
 
@@ -707,58 +811,12 @@ def mostrar_configuracion():
     ):
 
         st.session_state.login = False
-
         st.rerun()
 
 
-# =========================================
-# LOGIN
-# =========================================
-
-if "login" not in st.session_state:
-
-    st.session_state.login = False
-
-
-if not st.session_state.login:
-
-    if os.path.exists("logo.png"):
-        st.image(
-            "logo.png",
-            width=200
-        )
-
-    st.title("🚀 ATS PRO 7.0")
-
-    usuario = st.text_input(
-        "Usuario"
-    )
-
-    password = st.text_input(
-        "Contraseña",
-        type="password"
-    )
-
-    if st.button("Ingresar"):
-
-        if usuario == "admin" and password == "Dios2026":
-
-            st.session_state.login = True
-
-            st.rerun()
-
-        else:
-
-            st.error(
-                "Usuario o contraseña incorrectos"
-            )
-
-    st.stop()
-
-
-# =========================================
-# MENÚ
-# =========================================
+# =========================================================
+# SIDEBAR
+# =========================================================
 
 with st.sidebar:
 
@@ -769,8 +827,6 @@ with st.sidebar:
             "Clientes",
             "Vacantes",
             "Candidatos",
-            "Entrevistas",
-            "Contabilidad",
             "Reportes",
             "Configuración"
         ],
@@ -779,8 +835,6 @@ with st.sidebar:
             "building",
             "briefcase",
             "people",
-            "calendar",
-            "cash-stack",
             "bar-chart",
             "gear"
         ],
@@ -789,30 +843,24 @@ with st.sidebar:
     )
 
 
-# =========================================
+# =========================================================
 # NAVEGACIÓN
-# =========================================
+# =========================================================
 
 if menu == "Dashboard":
-    mostrar_dashboard()
+    dashboard()
 
 elif menu == "Clientes":
-    mostrar_clientes()
+    clientes()
 
 elif menu == "Vacantes":
-    mostrar_vacantes()
+    vacantes()
 
 elif menu == "Candidatos":
-    mostrar_candidatos()
-
-elif menu == "Entrevistas":
-    mostrar_entrevistas()
-
-elif menu == "Contabilidad":
-    mostrar_contabilidad()
+    candidatos()
 
 elif menu == "Reportes":
-    mostrar_reportes()
+    reportes()
 
 elif menu == "Configuración":
-    mostrar_configuracion()
+    configuracion()
