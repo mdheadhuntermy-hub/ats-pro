@@ -240,6 +240,21 @@ LOGIN
 ========================= */
 
 .login-box {{
+/* LOGIN INPUTS MÁS PEQUEÑOS */
+
+div[data-testid="stTextInput"] {
+
+    max-width: 320px;
+
+    margin: auto;
+}
+
+div[data-testid="stButton"] {
+
+    max-width: 320px;
+
+    margin: auto;
+}
 
     background:
     rgba(10,15,25,0.90);
@@ -414,31 +429,33 @@ if not st.session_state.login:
     st.markdown("""
     <div class="login-box">
 
-    <h1 style='text-align:center;'>
+    <h1 style='text-align:center; margin-bottom:10px;'>
     🚀 ATS PRO ELITE
     </h1>
 
-    <h4 style='
+    <p style='
     text-align:center;
     color:#cfcfcf;
-    margin-bottom:30px;
+    margin-bottom:35px;
+    font-size:18px;
     '>
     Inteligencia Artificial para Reclutamiento
-    </h4>
+    </p>
 
     </div>
     """, unsafe_allow_html=True)
 
-    col1, col2, col3 = st.columns([1,2,1])
+    # CENTRAR LOGIN
+    c1, c2, c3 = st.columns([1.5,1,1.5])
 
-    with col2:
+    with c2:
 
         usuario = st.text_input(
-            "👤 Usuario"
+            "Usuario"
         )
 
         password = st.text_input(
-            "🔒 Contraseña",
+            "Contraseña",
             type="password"
         )
 
