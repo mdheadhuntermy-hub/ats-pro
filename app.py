@@ -1,28 +1,28 @@
-# =========================================================
-# ATS PRO ELITE 2025 - PREMIUM UI
-# =========================================================
+# -*- coding: utf-8 -*-
 
 import streamlit as st
-import pandas as pd
-import sqlite3
-import matplotlib.pyplot as plt
 import os
 import base64
-from streamlit_option_menu import option_menu
 
-# =========================================================
-# CONFIG
-# =========================================================
+from auth.login import login
+from database.connection import get_connection, get_cursor, init_db
+
+from modules.dashboard import dashboard_page
+from modules.clientes import clientes_page
+from modules.vacantes import vacantes_page
+from modules.candidatos import candidatos_page
+from modules.entrevistas import entrevistas_page
+from modules.contabilidad import contabilidad_page
+from modules.reportes import reportes_page
+from modules.configuracion import configuracion_page
+
 
 st.set_page_config(
     page_title="ATS PRO ELITE",
-    page_icon="🚀",
+    page_icon="🧠",
     layout="wide"
 )
 
-# =========================================================
-# FONDO
-# =========================================================
 
 def get_base64(file):
     if os.path.exists(file):
@@ -30,17 +30,11 @@ def get_base64(file):
             return base64.b64encode(f.read()).decode()
     return ""
 
-bg = get_base64("fondo.jpg")
 
-# =========================================================
-# CSS PREMIUM
-# =========================================================
+bg = get_base64("fondo.jpg")
 
 st.markdown(f"""
 <style>
-
-/* ===== FONDO ===== */
-
 .stApp {{
     background:
     linear-gradient(
@@ -48,264 +42,134 @@ st.markdown(f"""
         rgba(3,8,20,0.88)
     ),
     url("data:image/jpg;base64,{bg}");
-
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
 }}
 
-/* ===== OCULTAR ===== */
-
 #MainMenu {{visibility:hidden;}}
 footer {{visibility:hidden;}}
 header {{visibility:hidden;}}
 
-/* ===== SIDEBAR ===== */
-
 section[data-testid="stSidebar"] {{
-
-    background:
-    rgba(5,10,20,0.95);
-
-    border-right:
-    1px solid rgba(255,255,255,0.08);
+    background: rgba(5,10,20,0.95);
+    border-right:1px solid rgba(255,255,255,0.08);
 }}
 
-/* ===== TEXTOS ===== */
-
-h1,h2,h3,h4,h5,h6 {{
+h1,h2,h3,h4,h5,h6,p,span,label,div {{
     color:white !important;
 }}
 
-p,span,label,div {{
-    color:white !important;
-}}
-
-/* ===== INPUTS ===== */
-
-.stTextInput input {{
-    background:
-    rgba(255,255,255,0.08) !important;
-
-    color:white !important;
-
+.stTextInput input,
+.stTextArea textarea {{
+    background-color: rgba(15,23,42,0.95) !important;
+    color: white !important;
     border-radius:14px !important;
-
-    border:
-    1px solid rgba(255,255,255,0.10) !important;
-
-    height:45px !important;
+    border:1px solid rgba(255,255,255,0.20) !important;
 }}
 
-textarea {{
-    background:
-    rgba(255,255,255,0.08) !important;
-
-    color:white !important;
-
-    border-radius:14px !important;
+.stTextInput input::placeholder,
+.stTextArea textarea::placeholder {{
+    color: #cbd5e1 !important;
 }}
 
-/* ===== BOTONES ===== */
+div[data-baseweb="select"] {{
+    background-color: rgba(15,23,42,0.95) !important;
+}}
+
+div[data-baseweb="select"] * {{
+    color: white !important;
+}}
 
 .stButton button {{
-
     width:100%;
-
     border:none;
-
     border-radius:14px;
-
     height:48px;
-
     color:white;
-
     font-weight:bold;
-
-    background:
-    linear-gradient(
-        90deg,
-        #2563eb,
-        #7c3aed
-    );
-
-    transition:0.3s;
+    background:linear-gradient(90deg,#2563eb,#7c3aed);
 }}
-
-.stButton button:hover {{
-
-    transform:translateY(-2px);
-
-    box-shadow:
-    0 0 20px rgba(37,99,235,0.4);
-}}
-
-/* ===== CARDS ===== */
 
 .card {{
-
-    background:
-    rgba(255,255,255,0.05);
-
-    border:
-    1px solid rgba(255,255,255,0.08);
-
+    background:rgba(255,255,255,0.05);
+    border:1px solid rgba(255,255,255,0.08);
     border-radius:24px;
-
     padding:25px;
-
-    backdrop-filter:blur(14px);
-
     margin-bottom:20px;
-
-    box-shadow:
-    0 0 25px rgba(0,0,0,0.25);
+    backdrop-filter:blur(14px);
 }}
-
-/* ===== METRICS ===== */
 
 div[data-testid="metric-container"] {{
-
-    background:
-    rgba(255,255,255,0.05);
-
-    border:
-    1px solid rgba(255,255,255,0.08);
-
+    background:rgba(255,255,255,0.05);
+    border:1px solid rgba(255,255,255,0.08);
     border-radius:22px;
-
     padding:22px;
-
-    backdrop-filter:blur(10px);
 }}
-
-/* ===== DATAFRAME ===== */
-
-[data-testid="stDataFrame"] {{
-
-    background:
-    rgba(255,255,255,0.04);
-
-    border-radius:20px;
-
-    padding:10px;
-}}
-
-/* ===== LOGIN ===== */
-
-.login-box {{
-
-    background:
-    rgba(10,15,25,0.92);
-
-    border:
-    1px solid rgba(255,255,255,0.08);
-
-    border-radius:28px;
-
-    padding:50px;
-
-    max-width:420px;
-
-    margin:auto;
-
-    margin-top:100px;
-
-    backdrop-filter:blur(20px);
-
-    text-align:center;
-}}
-
-/* ===== LOGIN CAMPOS ===== */
-
-div[data-testid="stTextInput"] {{
-    max-width:320px;
-    margin:auto;
-}}
-
-div[data-testid="stButton"] {{
-    max-width:320px;
-    margin:auto;
-}}
-
 </style>
 """, unsafe_allow_html=True)
 
-# =========================================================
-# DATABASE
-# =========================================================
 
-conn = sqlite3.connect(
-    "atspro.db",
-    check_same_thread=False
-)
+init_db()
 
-cursor = conn.cursor()
+conn = get_connection()
+cursor = get_cursor()
 
-# =========================================================
-# LOGIN
-# =========================================================
 
-if "login" not in st.session_state:
-    st.session_state.login = False
+def guardar():
+    conn.commit()
 
-if not st.session_state.login:
 
-    st.markdown("""
-    <div class='login-box'>
+@st.cache_resource
+def cargar_modelo_ia():
+    from sentence_transformers import SentenceTransformer
+    return SentenceTransformer("all-MiniLM-L6-v2")
 
-    <h1>🚀 ATS PRO ELITE</h1>
 
-    <p style='color:#cbd5e1;'>
-    Sistema Inteligente de Reclutamiento
-    </p>
+def calcular_match(vacante, cv):
+    try:
+        from sentence_transformers import util
 
-    </div>
-    """, unsafe_allow_html=True)
+        modelo_ia = cargar_modelo_ia()
 
-    c1,c2,c3 = st.columns([1.5,1,1.5])
-
-    with c2:
-
-        usuario = st.text_input("Usuario")
-        password = st.text_input(
-            "Contraseña",
-            type="password"
+        embedding1 = modelo_ia.encode(
+            vacante or "",
+            convert_to_tensor=True
         )
 
-        st.write("")
+        embedding2 = modelo_ia.encode(
+            cv or "",
+            convert_to_tensor=True
+        )
 
-        if st.button("Ingresar"):
+        similitud = util.pytorch_cos_sim(
+            embedding1,
+            embedding2
+        )
 
-            if usuario == "admin" and password == "Dios2026":
+        score = float(similitud[0][0]) * 100
+        score = max(0, min(score, 100))
 
-                st.session_state.login = True
-                st.rerun()
+        return int(score)
 
-            else:
-                st.error("Credenciales incorrectas")
+    except Exception:
+        return 0
 
-    st.stop()
 
-# =========================================================
-# SIDEBAR
-# =========================================================
+login(cursor)
+
 
 with st.sidebar:
 
     st.markdown("""
-    <h1 style='font-size:35px;'>
-    🚀 ATS PRO
-    </h1>
-
-    <p style='color:#94a3b8;'>
-    ELITE 2025
-    </p>
+    <h1>ATS PRO</h1>
+    <p style='color:#94a3b8;'>ELITE 2025</p>
     """, unsafe_allow_html=True)
 
-    menu = option_menu(
-        "",
-        [
+    rol = st.session_state.get("rol", "Administrador")
+
+    if rol == "Administrador":
+        opciones_menu = [
             "Dashboard",
             "Clientes",
             "Vacantes",
@@ -314,240 +178,60 @@ with st.sidebar:
             "Contabilidad",
             "Reportes",
             "Configuración"
-        ],
-        icons=[
-            "grid",
-            "building",
-            "briefcase",
-            "people",
-            "calendar",
-            "cash-stack",
-            "bar-chart",
-            "gear"
-        ],
-        default_index=0
+        ]
+
+    elif rol == "RH":
+        opciones_menu = [
+            "Dashboard",
+            "Vacantes",
+            "Candidatos",
+            "Entrevistas",
+            "Reportes",
+            "Configuración"
+        ]
+
+    elif rol == "Contabilidad":
+        opciones_menu = [
+            "Dashboard",
+            "Clientes",
+            "Contabilidad",
+            "Reportes",
+            "Configuración"
+        ]
+
+    else:
+        opciones_menu = [
+            "Dashboard",
+            "Configuración"
+        ]
+
+    menu = st.radio(
+        "Menú",
+        opciones_menu,
+        label_visibility="collapsed"
     )
 
-# =========================================================
-# DASHBOARD
-# =========================================================
 
 if menu == "Dashboard":
-
-    st.markdown("""
-    <h1>
-    👋 Bienvenido Administrador
-    </h1>
-
-    <p style='color:#cbd5e1;'>
-    Sistema ATS Inteligente con IA
-    </p>
-    """, unsafe_allow_html=True)
-
-    c1,c2,c3,c4 = st.columns(4)
-
-    with c1:
-        st.metric("Clientes", "12")
-
-    with c2:
-        st.metric("Vacantes", "8")
-
-    with c3:
-        st.metric("Candidatos", "54")
-
-    with c4:
-        st.metric("Entrevistas", "6")
-
-    st.write("")
-
-    col1,col2 = st.columns([1.3,1])
-
-    with col1:
-
-        st.markdown("""
-        <div class='card'>
-        <h3>🏆 Top Candidatos</h3>
-        </div>
-        """, unsafe_allow_html=True)
-
-        candidatos = [
-            "Juan Pérez",
-            "Ana López",
-            "Carlos Ruiz",
-            "María Torres"
-        ]
-
-        scores = [95,88,80,74]
-
-        fig, ax = plt.subplots()
-
-        ax.barh(candidatos, scores)
-
-        ax.set_facecolor("none")
-
-        fig.patch.set_alpha(0)
-
-        st.pyplot(fig)
-
-    with col2:
-
-        st.markdown("""
-        <div class='card'>
-        <h3>📊 Estados ATS</h3>
-        </div>
-        """, unsafe_allow_html=True)
-
-        estados = [
-            "Entrevista",
-            "Filtro RH",
-            "Rechazado"
-        ]
-
-        valores = [12,8,4]
-
-        fig2, ax2 = plt.subplots()
-
-        ax2.pie(
-            valores,
-            labels=estados,
-            autopct='%1.1f%%'
-        )
-
-        fig2.patch.set_alpha(0)
-
-        st.pyplot(fig2)
-
-# =========================================================
-# CLIENTES
-# =========================================================
+    dashboard_page(cursor)
 
 elif menu == "Clientes":
-
-    st.title("🏢 Clientes")
-
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-
-    empresa = st.text_input("Empresa")
-    contacto = st.text_input("Contacto")
-    correo = st.text_input("Correo")
-
-    if st.button("Guardar Cliente"):
-        st.success("Cliente guardado")
-
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# =========================================================
-# VACANTES
-# =========================================================
+    clientes_page(cursor, guardar)
 
 elif menu == "Vacantes":
-
-    st.title("💼 Vacantes")
-
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-
-    titulo = st.text_input("Título")
-    salario = st.text_input("Salario")
-    descripcion = st.text_area("Descripción")
-
-    if st.button("Guardar Vacante"):
-        st.success("Vacante creada")
-
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# =========================================================
-# CANDIDATOS
-# =========================================================
+    vacantes_page(cursor, guardar)
 
 elif menu == "Candidatos":
-
-    st.title("👥 ATS IA")
-
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-
-    st.file_uploader(
-        "Subir CV PDF",
-        type=["pdf"]
-    )
-
-    st.dataframe(pd.DataFrame({
-        "Nombre":[
-            "Juan",
-            "Ana"
-        ],
-        "Score":[95,88],
-        "Estado":[
-            "Entrevista",
-            "Filtro RH"
-        ]
-    }))
-
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# =========================================================
-# ENTREVISTAS
-# =========================================================
+    candidatos_page(cursor, guardar, calcular_match)
 
 elif menu == "Entrevistas":
-
-    st.title("📅 Entrevistas")
-
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-
-    st.text_input("Candidato")
-    st.date_input("Fecha")
-
-    if st.button("Guardar entrevista"):
-        st.success("Entrevista guardada")
-
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# =========================================================
-# CONTABILIDAD
-# =========================================================
+    entrevistas_page(cursor, guardar)
 
 elif menu == "Contabilidad":
-
-    st.title("💰 Contabilidad")
-
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
-
-    st.text_input("Cliente")
-    st.number_input("Monto")
-
-    if st.button("Guardar factura"):
-        st.success("Factura guardada")
-
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# =========================================================
-# REPORTES
-# =========================================================
+    contabilidad_page(cursor, guardar)
 
 elif menu == "Reportes":
-
-    st.title("📈 Reportes")
-
-    fig, ax = plt.subplots()
-
-    ax.plot(
-        [1,2,3,4],
-        [10,20,15,30]
-    )
-
-    fig.patch.set_alpha(0)
-
-    st.pyplot(fig)
-
-# =========================================================
-# CONFIG
-# =========================================================
+    reportes_page(cursor)
 
 elif menu == "Configuración":
-
-    st.title("⚙️ Configuración")
-
-    if st.button("Cerrar sesión"):
-
-        st.session_state.login = False
-        st.rerun()
+    configuracion_page(cursor, guardar)
