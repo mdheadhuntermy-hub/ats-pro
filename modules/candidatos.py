@@ -103,10 +103,18 @@ def candidatos_page(cursor, guardar, calcular_match):
                 pdf_path
             )
 
-        score = calcular_match(
-            descripcion_vacante,
-            texto_cv
-        )
+        if texto_cv.strip():
+
+           with st.spinner("Analizando CV con IA..."):
+
+              score = calcular_match(
+                  descripcion_vacante,
+                  texto_cv
+              )
+
+        else:
+
+            score = 0
 
         cursor.execute("""
             INSERT INTO candidatos(
