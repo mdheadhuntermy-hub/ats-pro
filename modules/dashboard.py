@@ -4,12 +4,10 @@ import pandas as pd
 
 def dashboard_page(cursor):
 
+    rol = st.session_state.get("rol", "")
+
     st.title("MDHEADHUNTER ATS PRO ELITE")
     st.subheader("Dashboard Ejecutivo")
-
-    total_clientes = cursor.execute("""
-        SELECT COUNT(*) FROM clientes
-    """).fetchone()[0]
 
     total_vacantes = cursor.execute("""
         SELECT COUNT(*) FROM vacantes
@@ -33,29 +31,41 @@ def dashboard_page(cursor):
         WHERE estado='Rechazado'
     """).fetchone()[0]
 
-    ingresos = cursor.execute("""
-        SELECT COALESCE(SUM(total),0)
-        FROM facturas
-    """).fetchone()[0]
-
-    utilidad = cursor.execute("""
-        SELECT COALESCE(SUM(utilidad),0)
-        FROM facturas
-    """).fetchone()[0]
-
     c1, c2, c3 = st.columns(3)
-    c1.metric("Clientes", total_clientes)
-    c2.metric("Vacantes", total_vacantes)
-    c3.metric("Candidatos", total_candidatos)
 
-    c4, c5, c6 = st.columns(3)
+    c1.metric("Vacantes", total_vacantes)
+    c2.metric("Candidatos", total_candidatos)
+    c3.metric("Entrevistas", total_entrevistas)
+
+    c4, c5 = st.columns(2)
+
     c4.metric("Contratados", contratados)
     c5.metric("Rechazados", rechazados)
-    c6.metric("Entrevistas", total_entrevistas)
 
-    c7, c8 = st.columns(2)
-    c7.metric("Facturación", f"${ingresos:,.2f}")
-    c8.metric("Utilidad", f"${utilidad:,.2f}")
+    if rol == "Administrador":
+
+        total_clientes = cursor.execute("""
+            SELECT COUNT(*) FROM clientes
+        """).fetchone()[0]
+
+        ingresos = cursor.execute("""
+            SELECT COALESCE(SUM(total),0)
+            FROM facturas
+        """).fetchone()[0]
+
+        utilidad = cursor.execute("""
+            SELECT COALESCE(SUM(utilidad),0)
+            FROM facturas
+        """).fetchone()[0]
+
+        st.divider()
+        st.subheader("💰 Resumen Administrativo")
+
+        c6, c7, c8 = st.columns(3)
+
+        c6.metric("Clientes", total_clientes)
+        c7.metric("Facturación", f"${ingresos:,.2f}")
+        c8.metric("Utilidad", f"${utilidad:,.2f}")
 
     st.divider()
 

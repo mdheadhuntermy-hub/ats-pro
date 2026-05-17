@@ -20,6 +20,11 @@ def configuracion_page(cursor, guardar):
 
     st.divider()
 
+    if st.session_state.rol != "Administrador":
+
+        st.info("Solo el administrador puede crear o eliminar usuarios.")
+        return
+
     st.subheader("👥 Usuarios del sistema")
 
     nuevo_usuario = st.text_input("Nuevo usuario")
