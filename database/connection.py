@@ -7,21 +7,30 @@ DB_NAME = "atspro.db"
 
 @st.cache_resource
 def get_connection():
+
     conn = sqlite3.connect(
         DB_NAME,
         check_same_thread=False
     )
+
     return conn
 
 
 def get_cursor():
+
     conn = get_connection()
+
     return conn.cursor()
 
 
 def init_db():
+
     conn = get_connection()
     cursor = conn.cursor()
+
+    # =========================================
+    # USUARIOS
+    # =========================================
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS usuarios(
@@ -31,6 +40,10 @@ def init_db():
         rol TEXT
     )
     """)
+
+    # =========================================
+    # CLIENTES
+    # =========================================
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS clientes(
@@ -42,6 +55,10 @@ def init_db():
     )
     """)
 
+    # =========================================
+    # VACANTES
+    # =========================================
+
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS vacantes(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -50,6 +67,10 @@ def init_db():
         descripcion TEXT
     )
     """)
+
+    # =========================================
+    # CANDIDATOS
+    # =========================================
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS candidatos(
@@ -61,9 +82,14 @@ def init_db():
         score INTEGER,
         estado TEXT,
         vacante TEXT,
-        pdf TEXT
+        pdf TEXT,
+        dictamen TEXT
     )
     """)
+
+    # =========================================
+    # ENTREVISTAS
+    # =========================================
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS entrevistas(
@@ -78,19 +104,9 @@ def init_db():
     )
     """)
 
-    for columna, tipo in [
-        ("hora", "TEXT"),
-        ("entrevistador", "TEXT"),
-        ("calificacion", "INTEGER"),
-        ("observaciones", "TEXT"),
-        ("resultado", "TEXT")
-    ]:
-        try:
-            cursor.execute(
-                f"ALTER TABLE entrevistas ADD COLUMN {columna} {tipo}"
-            )
-        except:
-            pass
+    # =========================================
+    # FACTURAS
+    # =========================================
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS facturas(
@@ -108,6 +124,10 @@ def init_db():
         utilidad REAL
     )
     """)
+
+    # =========================================
+    # CREAR ADMIN
+    # =========================================
 
     usuario_admin = cursor.execute("""
         SELECT *
@@ -129,5 +149,19 @@ def init_db():
             "Dios2026",
             "Administrador"
         ))
+
+    # =========================================
+    # AGREGAR DICTAMEN SI NO EXISTE
+    # =========================================
+
+    try:
+
+        cursor.execute("""
+            ALTER TABLE candidatos
+            ADD COLUMN dictamen TEXT
+        """)
+
+    except:
+        pass
 
     conn.commit()

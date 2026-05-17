@@ -4,6 +4,7 @@ import streamlit as st
 import os
 import base64
 
+from streamlit_option_menu import option_menu
 from auth.login import login
 from database.connection import get_connection, get_cursor, init_db
 
@@ -31,7 +32,7 @@ def get_base64(file):
     return ""
 
 
-bg = get_base64("fondo.jpg")
+bg = get_base64("assets/fondo.jpg")
 
 st.markdown(f"""
 <style>
@@ -73,11 +74,21 @@ h1,h2,h3,h4,h5,h6,p,span,label,div {{
     color: #cbd5e1 !important;
 }}
 
-div[data-baseweb="select"] {{
+.stSelectbox div[data-baseweb="select"] > div {{
     background-color: rgba(15,23,42,0.95) !important;
+    color: white !important;
+    border: 1px solid rgba(255,255,255,0.20) !important;
 }}
 
-div[data-baseweb="select"] * {{
+.stSelectbox svg {{
+    fill: white !important;
+}}
+
+.stSelectbox span {{
+    color: white !important;
+}}
+
+.stSelectbox input {{
     color: white !important;
 }}
 
@@ -100,12 +111,52 @@ div[data-baseweb="select"] * {{
     backdrop-filter:blur(14px);
 }}
 
+
 div[data-testid="metric-container"] {{
     background:rgba(255,255,255,0.05);
     border:1px solid rgba(255,255,255,0.08);
     border-radius:22px;
     padding:22px;
 }}
+
+.stNumberInput input,
+.stDateInput input {{
+    background-color: rgba(15,23,42,0.95) !important;
+    color: white !important;
+    border-radius:14px !important;
+    border:1px solid rgba(255,255,255,0.20) !important;
+}}
+
+.stNumberInput button,
+.stDateInput button {{
+    background-color: rgba(15,23,42,0.95) !important;
+    color: white !important;
+}}
+
+div[data-baseweb="popover"] {{
+    background-color: rgba(15,23,42,0.98) !important;
+    color: white !important;
+}}
+
+div[data-baseweb="popover"] * {{
+    background-color: rgba(15,23,42,0.98) !important;
+    color: white !important;
+}}
+
+ul[role="listbox"] {{
+    background-color: rgba(15,23,42,0.98) !important;
+}}
+
+li[role="option"] {{
+    background-color: rgba(15,23,42,0.98) !important;
+    color: white !important;
+}}
+
+li[role="option"]:hover {{
+    background-color: rgba(37,99,235,0.55) !important;
+    color: white !important;
+}}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -161,14 +212,24 @@ login(cursor)
 
 with st.sidebar:
 
+    if os.path.exists("assets/logo.png"):
+        st.image(
+            "assets/logo.png",
+            width=180
+        )
+
     st.markdown("""
     <h1>ATS PRO</h1>
     <p style='color:#94a3b8;'>ELITE 2025</p>
     """, unsafe_allow_html=True)
 
-    rol = st.session_state.get("rol", "Administrador")
+    rol = st.session_state.get(
+        "rol",
+        "Administrador"
+    )
 
     if rol == "Administrador":
+
         opciones_menu = [
             "Dashboard",
             "Clientes",
@@ -181,6 +242,7 @@ with st.sidebar:
         ]
 
     elif rol == "RH":
+
         opciones_menu = [
             "Dashboard",
             "Vacantes",
@@ -191,6 +253,7 @@ with st.sidebar:
         ]
 
     elif rol == "Contabilidad":
+
         opciones_menu = [
             "Dashboard",
             "Clientes",
@@ -200,17 +263,52 @@ with st.sidebar:
         ]
 
     else:
+
         opciones_menu = [
             "Dashboard",
             "Configuración"
         ]
 
-    menu = st.radio(
-        "Menú",
-        opciones_menu,
-        label_visibility="collapsed"
-    )
-
+    menu = option_menu(
+    menu_title=None,
+    options=opciones_menu,
+    icons=[
+        "speedometer2",
+        "building",
+        "briefcase",
+        "people",
+        "calendar-check",
+        "cash-coin",
+        "bar-chart-line",
+        "gear"
+    ],
+    default_index=0,
+    styles={
+        "container": {
+            "padding": "6px",
+            "background-color": "rgba(15,23,42,0.92)",
+            "border-radius": "18px"
+        },
+        "icon": {
+            "color": "#38bdf8",
+            "font-size": "18px"
+        },
+        "nav-link": {
+            "font-size": "15px",
+            "text-align": "left",
+            "margin": "5px 0",
+            "border-radius": "12px",
+            "color": "#e5e7eb",
+            "background-color": "rgba(15,23,42,0.55)",
+            "--hover-color": "rgba(37,99,235,0.30)"
+        },
+        "nav-link-selected": {
+            "background": "linear-gradient(90deg,#2563eb,#7c3aed)",
+            "color": "#ffffff",
+            "font-weight": "700"
+        }
+    }
+)
 
 if menu == "Dashboard":
     dashboard_page(cursor)

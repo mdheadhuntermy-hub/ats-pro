@@ -4,7 +4,7 @@ import pandas as pd
 
 def dashboard_page(cursor):
 
-    st.title("🚀 ATS PRO ELITE")
+    st.title("MDHEADHUNTER ATS PRO ELITE")
     st.subheader("Dashboard Ejecutivo")
 
     total_clientes = cursor.execute("""
