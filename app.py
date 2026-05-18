@@ -41,6 +41,8 @@ bg = get_base64("assets/fondo.jpg")
 st.markdown(f"""
 <style>
 .stApp {{
+
+
     background:
     linear-gradient(rgba(3,8,20,0.88), rgba(3,8,20,0.88)),
     url("data:image/jpg;base64,{bg}");
@@ -49,19 +51,15 @@ st.markdown(f"""
     background-attachment: fixed;
 }}
 
-#MainMenu {{visibility:hidden;}}
-footer {{visibility:hidden;}}
-
-section[data-testid="stSidebar"] {{
-    min-width: 280px !important;
-    width: 280px !important;
-    background: rgba(5,10,20,0.95) !important;
-    border-right:1px solid rgba(255,255,255,0.08) !important;
+#MainMenu {{
+    visibility:hidden;
+}}
+footer {{
+    visibility:hidden;
 }}
 
-section[data-testid="stSidebar"] > div {{
-    display: block !important;
-    visibility: visible !important;
+footer {{
+    visibility:hidden;
 }}
 
 h1,h2,h3,h4,h5,h6,p,span,label,div {{
@@ -78,19 +76,10 @@ h1,h2,h3,h4,h5,h6,p,span,label,div {{
     border:1px solid rgba(255,255,255,0.20) !important;
 }}
 
-.stTextInput input::placeholder,
-.stTextArea textarea::placeholder {{
-    color: #cbd5e1 !important;
-}}
-
 .stSelectbox div[data-baseweb="select"] > div {{
     background-color: rgba(15,23,42,0.95) !important;
     color: white !important;
-    border: 1px solid rgba(255,255,255,0.20) !important;
-}}
-
-.stSelectbox svg {{
-    fill: white !important;
+    border:1px solid rgba(255,255,255,0.20) !important;
 }}
 
 .stButton button {{
@@ -119,13 +108,6 @@ div[data-testid="metric-container"] {{
     padding:22px;
 }}
 
-div[data-baseweb="popover"],
-div[data-baseweb="popover"] *,
-ul[role="listbox"],
-li[role="option"] {{
-    background-color: rgba(15,23,42,0.98) !important;
-    color: white !important;
-}}
 </style>
 """, unsafe_allow_html=True)
 
