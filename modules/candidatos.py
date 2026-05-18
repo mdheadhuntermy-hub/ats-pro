@@ -2,7 +2,11 @@ import streamlit as st
 import os
 import uuid
 
-from utils.pdf_generator import generar_pdf_dictamen, generar_pdf_simple_dictamen
+from services.interview_ai import generar_entrevista_ia
+from utils.pdf_generator import (
+    generar_pdf_dictamen,
+    generar_pdf_simple_dictamen
+)
 from services.pdf_service import extraer_texto_pdf
 
 
@@ -12,25 +16,25 @@ def generar_dictamen(score, descripcion_vacante, texto_cv, skills):
         resultado = "RECOMENDABLE"
         conclusion = (
             "El candidato presenta una alta compatibilidad con la vacante. "
-            "Se recomienda avanzar a entrevista o siguiente etapa del proceso."
+            "Se recomienda avanzar a entrevista o siguiente etapa."
         )
+
     elif score >= 60:
         resultado = "PARCIALMENTE RECOMENDABLE"
         conclusion = (
-            "El candidato presenta compatibilidad media con la vacante. "
-            "Se recomienda revisión RH para validar experiencia, estabilidad y competencias clave."
+            "El candidato presenta compatibilidad media con la vacante."
         )
+
     elif score >= 40:
         resultado = "EN OBSERVACIÓN"
         conclusion = (
-            "El candidato muestra algunos elementos relacionados con la vacante, "
-            "pero requiere validación adicional antes de avanzar."
+            "El candidato requiere validación adicional."
         )
+
     else:
         resultado = "NO RECOMENDABLE"
         conclusion = (
-            "El candidato presenta baja compatibilidad inicial con la vacante. "
-            "No se recomienda avanzar salvo que existan criterios estratégicos adicionales."
+            "El candidato presenta baja compatibilidad."
         )
 
     dictamen = f"""
@@ -39,10 +43,10 @@ Resultado IA: {resultado}
 Match estimado: {score}%
 
 Análisis:
-La evaluación considera la descripción de la vacante, el contenido extraído del CV PDF y los comentarios capturados en el campo Skills / Comentarios RH.
+La evaluación considera la vacante, CV y comentarios RH.
 
-Comentarios RH considerados:
-{skills if skills else "Sin comentarios adicionales capturados."}
+Comentarios RH:
+{skills if skills else "Sin comentarios"}
 
 Conclusión:
 {conclusion}
@@ -57,55 +61,24 @@ def generar_dictamen_seguridad(texto_seguridad):
 
     riesgo = "BAJO"
     resultado = "APTO"
-    observaciones = "No se identifican observaciones relevantes de riesgo."
 
-    palabras_riesgo = [
-        "antecedentes",
-        "negativo",
-        "registro judicial",
-        "listas",
-        "sat 69",
-        "sat-69",
-        "sat 69b",
-        "sat-69b",
-        "pld",
-        "riesgo",
-        "observación"
-    ]
+    if (
+        "antecedentes" in texto or
+        "riesgo" in texto or
+        "negativo" in texto
+    ):
+        riesgo = "REVISAR"
+        resultado = "APTO CON OBSERVACIONES"
 
-    for palabra in palabras_riesgo:
-        if palabra in texto:
-            riesgo = "REVISAR"
-            resultado = "APTO CON OBSERVACIONES"
-            observaciones = (
-                "El estudio contiene términos que requieren revisión manual por RH "
-                "antes de emitir una decisión final."
-            )
-
-    if "no se han encontrado registros" in texto or "sin observaciones" in texto:
-        riesgo = "BAJO"
-        resultado = "APTO"
-        observaciones = (
-            "El estudio no muestra hallazgos relevantes en antecedentes, listas o cumplimiento."
-        )
-
-    dictamen = f"""
-DICTAMEN DE SEGURIDAD Y CONFIABILIDAD
+    return f"""
+DICTAMEN DE SEGURIDAD
 
 Resultado: {resultado}
-Nivel de riesgo: {riesgo}
-
-Resumen:
-Se analizó el estudio de seguridad cargado para el candidato, considerando identidad, historial laboral, listas, antecedentes y cumplimiento cuando la información está disponible en el documento.
-
-Observaciones:
-{observaciones}
+Riesgo: {riesgo}
 
 Conclusión:
-El candidato puede continuar en el proceso siempre que la información documental sea consistente con los criterios internos de contratación.
-"""
-
-    return dictamen.strip()
+Se recomienda validación RH final.
+""".strip()
 
 
 def generar_dictamen_psicometrico(texto_psicometrico):
@@ -113,78 +86,41 @@ def generar_dictamen_psicometrico(texto_psicometrico):
     texto = (texto_psicometrico or "").lower()
 
     resultado = "RECOMENDABLE"
-    observaciones = (
-        "El perfil psicométrico no muestra alertas críticas evidentes en el documento analizado."
-    )
 
-    palabras_alerta = [
-        "bajo",
-        "riesgo",
-        "no recomendable",
-        "alerta",
-        "impulsividad",
-        "deshonestidad",
-        "inestabilidad",
-        "conflicto",
-        "agresividad"
-    ]
+    if (
+        "no recomendable" in texto or
+        "agresividad" in texto or
+        "inestabilidad" in texto
+    ):
+        resultado = "RECOMENDABLE CON RESERVAS"
 
-    for palabra in palabras_alerta:
-        if palabra in texto:
-            resultado = "RECOMENDABLE CON RESERVAS"
-            observaciones = (
-                "El reporte contiene elementos que requieren revisión RH antes de avanzar. "
-                "Se recomienda validar competencias, estabilidad, apego a normas y ajuste al puesto."
-            )
-
-    if "no recomendable" in texto:
-        resultado = "NO RECOMENDABLE"
-        observaciones = (
-            "El reporte presenta indicadores desfavorables. Se recomienda no avanzar "
-            "sin una revisión profunda del caso."
-        )
-
-    dictamen = f"""
+    return f"""
 DICTAMEN PSICOMÉTRICO
 
 Resultado: {resultado}
 
-Resumen:
-Se analizó el reporte psicométrico cargado para el candidato, considerando competencias, rasgos conductuales, ajuste al puesto y posibles indicadores de riesgo.
-
-Observaciones:
-{observaciones}
-
 Conclusión:
-La decisión final debe complementarse con entrevista RH, referencias laborales y criterios específicos de la vacante.
-"""
-
-    return dictamen.strip()
+Evaluación basada en resultados psicométricos cargados.
+""".strip()
 
 
 def ajustar_score_por_comentarios(score, skills):
 
-    texto_negativo = (skills or "").lower()
+    texto = (skills or "").lower()
 
     palabras_negativas = [
-        "no tiene experiencia",
         "sin experiencia",
-        "no cuenta con experiencia",
-        "sin conocimientos",
-        "no sabe",
+        "no tiene experiencia",
         "junior",
-        "no ha trabajado",
-        "no conoce",
         "no domina"
     ]
 
     for palabra in palabras_negativas:
-        if palabra in texto_negativo:
+
+        if palabra in texto:
             score -= 25
 
-    score = max(0, min(score, 100))
-
-    return int(score)
+    return max(0, min(score, 100))
 
 
 def guardar_archivo_pdf(archivo, carpeta):
@@ -196,7 +132,11 @@ def guardar_archivo_pdf(archivo, carpeta):
         os.makedirs(carpeta)
 
     filename = f"{uuid.uuid4()}.pdf"
-    ruta = os.path.join(carpeta, filename)
+
+    ruta = os.path.join(
+        carpeta,
+        filename
+    )
 
     with open(ruta, "wb") as f:
         f.write(archivo.read())
@@ -215,8 +155,7 @@ def candidatos_page(cursor, guardar, calcular_match):
     telefono = st.text_input("Teléfono")
 
     skills = st.text_area(
-        "Skills / Comentarios RH",
-        help="Agrega habilidades, observaciones, experiencia relevante o comentarios del reclutador."
+        "Skills / Comentarios RH"
     )
 
     estado = st.selectbox(
@@ -239,27 +178,26 @@ def candidatos_page(cursor, guardar, calcular_match):
     lista_vacantes = [v[0] for v in vacantes_db]
 
     if lista_vacantes:
-        vacante = st.selectbox("Vacante", lista_vacantes)
+        vacante = st.selectbox(
+            "Vacante",
+            lista_vacantes
+        )
     else:
-        st.warning("Primero debes crear una vacante")
         vacante = ""
 
     cv_pdf = st.file_uploader(
         "Subir CV PDF",
-        type=["pdf"],
-        key="cv_pdf"
+        type=["pdf"]
     )
 
     seguridad_pdf = st.file_uploader(
         "📄 Estudio de Seguridad PDF",
-        type=["pdf"],
-        key="seguridad_pdf"
+        type=["pdf"]
     )
 
     psicometrico_pdf = st.file_uploader(
         "🧠 Pruebas Psicométricas PDF",
-        type=["pdf"],
-        key="psicometrico_pdf"
+        type=["pdf"]
     )
 
     if st.button("Guardar Candidato"):
@@ -272,42 +210,46 @@ def candidatos_page(cursor, guardar, calcular_match):
             vacante,
         )).fetchone()
 
-        if datos_vacante:
-            descripcion_vacante = datos_vacante[0]
-        else:
-            descripcion_vacante = vacante
+        descripcion_vacante = (
+            datos_vacante[0]
+            if datos_vacante
+            else vacante
+        )
 
-        pdf_path, texto_cv = guardar_archivo_pdf(cv_pdf, "cv")
-        seguridad_path, texto_seguridad = guardar_archivo_pdf(seguridad_pdf, "seguridad")
-        psicometrico_path, texto_psicometrico = guardar_archivo_pdf(psicometrico_pdf, "psicometricos")
+        pdf_path, texto_cv = guardar_archivo_pdf(
+            cv_pdf,
+            "cv"
+        )
 
-        texto_evaluacion = f"""
-        VACANTE:
-        {descripcion_vacante}
+        seguridad_path, texto_seguridad = guardar_archivo_pdf(
+            seguridad_pdf,
+            "seguridad"
+        )
 
-        CV:
-        {texto_cv}
+        psicometrico_path, texto_psicometrico = guardar_archivo_pdf(
+            psicometrico_pdf,
+            "psicometricos"
+        )
 
-        SKILLS / COMENTARIOS RH:
-        {skills}
-        """
+        score_cv = calcular_match(
+            descripcion_vacante,
+            texto_cv
+        )
 
-        if texto_evaluacion.strip():
+        score_skills = calcular_match(
+            descripcion_vacante,
+            skills
+        )
 
-            with st.spinner("Analizando CV, vacante y comentarios RH con IA..."):
+        score = int(
+            (score_cv * 0.7) +
+            (score_skills * 0.3)
+        )
 
-                score_cv = calcular_match(descripcion_vacante, texto_cv)
-                score_skills = calcular_match(descripcion_vacante, skills)
-
-                score = int(
-                    (score_cv * 0.7) +
-                    (score_skills * 0.3)
-                )
-
-                score = ajustar_score_por_comentarios(score, skills)
-
-        else:
-            score = 0
+        score = ajustar_score_por_comentarios(
+            score,
+            skills
+        )
 
         dictamen = generar_dictamen(
             score,
@@ -316,13 +258,13 @@ def candidatos_page(cursor, guardar, calcular_match):
             skills
         )
 
-        dictamen_seguridad = ""
-        if texto_seguridad.strip():
-            dictamen_seguridad = generar_dictamen_seguridad(texto_seguridad)
+        dictamen_seguridad = generar_dictamen_seguridad(
+            texto_seguridad
+        )
 
-        dictamen_psicometrico = ""
-        if texto_psicometrico.strip():
-            dictamen_psicometrico = generar_dictamen_psicometrico(texto_psicometrico)
+        dictamen_psicometrico = generar_dictamen_psicometrico(
+            texto_psicometrico
+        )
 
         cursor.execute("""
             INSERT INTO candidatos(
@@ -358,52 +300,28 @@ def candidatos_page(cursor, guardar, calcular_match):
         ))
 
         guardar()
-        st.success("✅ Candidato guardado con dictámenes")
+
+        st.success(
+            "✅ Candidato guardado"
+        )
+
         st.rerun()
 
     st.divider()
-    st.subheader("📋 Candidatos Registrados")
 
-    busqueda = st.text_input("🔍 Buscar candidato")
-
-    if busqueda:
-
-        candidatos = cursor.execute("""
-            SELECT *
-            FROM candidatos
-            WHERE nombre LIKE ?
-            OR skills LIKE ?
-            OR vacante LIKE ?
-            OR dictamen LIKE ?
-            OR dictamen_seguridad LIKE ?
-            OR dictamen_psicometrico LIKE ?
-            ORDER BY score DESC
-        """, (
-            f"%{busqueda}%",
-            f"%{busqueda}%",
-            f"%{busqueda}%",
-            f"%{busqueda}%",
-            f"%{busqueda}%",
-            f"%{busqueda}%"
-        )).fetchall()
-
-    else:
-
-        candidatos = cursor.execute("""
-            SELECT *
-            FROM candidatos
-            ORDER BY score DESC
-        """).fetchall()
+    candidatos = cursor.execute("""
+        SELECT *
+        FROM candidatos
+        ORDER BY score DESC
+    """).fetchall()
 
     if candidatos:
 
         for candidato in candidatos:
 
-            dictamen = candidato[9] if len(candidato) > 9 and candidato[9] else ""
-            seguridad_path = candidato[10] if len(candidato) > 10 and candidato[10] else ""
-            dictamen_seguridad = candidato[11] if len(candidato) > 11 and candidato[11] else ""
-            psicometrico_path = candidato[12] if len(candidato) > 12 and candidato[12] else ""
-            dictamen_psicometrico = candidato[13] if len(candidato) > 13 and candidato[13] else ""
+            dictamen = candidato[9]
+            dictamen_seguridad = candidato[11]
+            dictamen_psicometrico = candidato[13]
 
             st.markdown(
                 "<div class='card'>",
@@ -413,223 +331,138 @@ def candidatos_page(cursor, guardar, calcular_match):
             st.write(f"👤 Nombre: {candidato[1]}")
             st.write(f"📧 Correo: {candidato[2]}")
             st.write(f"📱 Teléfono: {candidato[3]}")
-            st.write(f"🛠 Skills / Comentarios RH: {candidato[4]}")
+            st.write(f"🛠 Skills: {candidato[4]}")
             st.write(f"🎯 Match IA: {candidato[5]}%")
             st.write(f"📌 Estado: {candidato[6]}")
             st.write(f"💼 Vacante: {candidato[7]}")
 
+            with st.expander("🤖 Entrevista IA"):
+
+                entrevista_ia = generar_entrevista_ia(
+                    candidato[7],
+                    candidato[4],
+                    candidato[5]
+                )
+
+                st.subheader(
+                    "Preguntas sugeridas"
+                )
+
+                for pregunta in entrevista_ia["preguntas"]:
+
+                    st.write(f"• {pregunta}")
+
+                st.subheader(
+                    "Fortalezas detectadas"
+                )
+
+                for fortaleza in entrevista_ia["fortalezas"]:
+
+                    st.success(fortaleza)
+
+                st.subheader(
+                    "Riesgos detectados"
+                )
+
+                for riesgo in entrevista_ia["riesgos"]:
+
+                    st.warning(riesgo)
+
             if dictamen:
 
-                with st.expander("🧠 Ver Dictamen IA"):
+                with st.expander(
+                    "🧠 Ver Dictamen IA"
+                ):
 
                     st.text(dictamen)
 
-                    pdf_path = f"dictamen_{candidato[1]}.pdf"
-
-                    if st.button(
-                        "📄 Generar PDF Ejecutivo",
-                        key=f"pdf_dictamen_{candidato[0]}"
-                    ):
-
-                        generar_pdf_dictamen(
-                            nombre=candidato[1],
-                            vacante=candidato[7],
-                            match=candidato[5],
-                            estado=candidato[6],
-                            skills=candidato[4],
-                            dictamen=dictamen,
-                            output_path=pdf_path
-                        )
-
-                        st.success("PDF generado correctamente")
-
-                    if os.path.exists(pdf_path):
-
-                        with open(pdf_path, "rb") as pdf:
-
-                            st.download_button(
-                                label="⬇️ Descargar PDF Ejecutivo",
-                                data=pdf,
-                                file_name=pdf_path,
-                                mime="application/pdf",
-                                key=f"download_dictamen_{candidato[0]}"
-                            )
-
             if dictamen_seguridad:
 
-                with st.expander("🛡️ Ver Dictamen de Seguridad"):
+                with st.expander(
+                    "🛡️ Dictamen Seguridad"
+                ):
 
                     st.text(dictamen_seguridad)
 
-                    pdf_seguridad = f"dictamen_seguridad_{candidato[1]}.pdf"
-
-                    if st.button(
-                        "📄 Generar PDF Seguridad",
-                        key=f"pdf_seguridad_dictamen_{candidato[0]}"
-                    ):
-
-                        generar_pdf_simple_dictamen(
-                            titulo="DICTAMEN DE SEGURIDAD Y CONFIABILIDAD",
-                            nombre=candidato[1],
-                            vacante=candidato[7],
-                            dictamen=dictamen_seguridad,
-                            output_path=pdf_seguridad
-                        )
-
-                        st.success("PDF de seguridad generado correctamente")
-
-                    if os.path.exists(pdf_seguridad):
-
-                        with open(pdf_seguridad, "rb") as pdf:
-
-                            st.download_button(
-                                label="⬇️ Descargar PDF Seguridad",
-                                data=pdf,
-                                file_name=pdf_seguridad,
-                                mime="application/pdf",
-                                key=f"download_pdf_seguridad_{candidato[0]}"
-                            )
-
             if dictamen_psicometrico:
 
-                with st.expander("🧠 Ver Dictamen Psicométrico"):
+                with st.expander(
+                    "🧠 Dictamen Psicométrico"
+                ):
 
                     st.text(dictamen_psicometrico)
 
-                    pdf_psicometrico = f"dictamen_psicometrico_{candidato[1]}.pdf"
-
-                    if st.button(
-                        "📄 Generar PDF Psicométrico",
-                        key=f"pdf_psicometrico_dictamen_{candidato[0]}"
-                    ):
-
-                        generar_pdf_simple_dictamen(
-                            titulo="DICTAMEN PSICOMÉTRICO",
-                            nombre=candidato[1],
-                            vacante=candidato[7],
-                            dictamen=dictamen_psicometrico,
-                            output_path=pdf_psicometrico
-                        )
-
-                        st.success("PDF psicométrico generado correctamente")
-
-                    if os.path.exists(pdf_psicometrico):
-
-                        with open(pdf_psicometrico, "rb") as pdf:
-
-                            st.download_button(
-                                label="⬇️ Descargar PDF Psicométrico",
-                                data=pdf,
-                                file_name=pdf_psicometrico,
-                                mime="application/pdf",
-                                key=f"download_pdf_psicometrico_{candidato[0]}"
-                            )
-
-            estados = [
-                "Filtro RH",
-                "Entrevista",
-                "Prueba Técnica",
-                "Contratado",
-                "Rechazado"
-            ]
-
-            estado_actual = candidato[6]
-
-            if estado_actual not in estados:
-                estado_actual = "Filtro RH"
-
-            nuevo_estado = st.selectbox(
-                "Cambiar Estado",
-                estados,
-                index=estados.index(estado_actual),
-                key=f"estado_{candidato[0]}"
-            )
-
-            if st.button(
-                "Actualizar Estado",
-                key=f"update_{candidato[0]}"
+            with st.expander(
+                "✏️ Editar Candidato"
             ):
 
-                cursor.execute("""
-                    UPDATE candidatos
-                    SET estado=?
-                    WHERE id=?
-                """, (
-                    nuevo_estado,
-                    candidato[0]
-                ))
+                nuevo_nombre = st.text_input(
+                    "Nombre",
+                    value=candidato[1],
+                    key=f"n_{candidato[0]}"
+                )
 
-                guardar()
-                st.success("✅ Estado actualizado")
-                st.rerun()
+                nuevo_correo = st.text_input(
+                    "Correo",
+                    value=candidato[2],
+                    key=f"c_{candidato[0]}"
+                )
 
-            col1, col2, col3 = st.columns(3)
+                nuevo_telefono = st.text_input(
+                    "Teléfono",
+                    value=candidato[3],
+                    key=f"t_{candidato[0]}"
+                )
 
-            with col1:
+                nuevo_skills = st.text_area(
+                    "Skills",
+                    value=candidato[4],
+                    key=f"s_{candidato[0]}"
+                )
 
-                if candidato[8] and os.path.exists(candidato[8]):
+                if st.button(
+                    "💾 Guardar",
+                    key=f"save_{candidato[0]}"
+                ):
 
-                    with open(candidato[8], "rb") as pdf:
+                    cursor.execute("""
+                        UPDATE candidatos
+                        SET
+                            nombre=?,
+                            correo=?,
+                            telefono=?,
+                            skills=?
+                        WHERE id=?
+                    """, (
+                        nuevo_nombre,
+                        nuevo_correo,
+                        nuevo_telefono,
+                        nuevo_skills,
+                        candidato[0]
+                    ))
 
-                        st.download_button(
-                            "📄 Descargar CV",
-                            pdf,
-                            file_name=f"{candidato[1]}.pdf",
-                            mime="application/pdf",
-                            key=f"pdf_cv_{candidato[0]}"
-                        )
+                    guardar()
 
-                elif candidato[8]:
+                    st.success(
+                        "✅ Actualizado"
+                    )
 
-                    st.warning("CV no disponible en Render.")
-
-            with col2:
-
-                if seguridad_path and os.path.exists(seguridad_path):
-
-                    with open(seguridad_path, "rb") as pdf:
-
-                        st.download_button(
-                            "🛡️ Descargar Seguridad",
-                            pdf,
-                            file_name=f"seguridad_{candidato[1]}.pdf",
-                            mime="application/pdf",
-                            key=f"pdf_seguridad_{candidato[0]}"
-                        )
-
-                elif seguridad_path:
-
-                    st.warning("Estudio de seguridad no disponible en Render.")
-
-            with col3:
-
-                if psicometrico_path and os.path.exists(psicometrico_path):
-
-                    with open(psicometrico_path, "rb") as pdf:
-
-                        st.download_button(
-                            "🧠 Descargar Psicométrico",
-                            pdf,
-                            file_name=f"psicometrico_{candidato[1]}.pdf",
-                            mime="application/pdf",
-                            key=f"pdf_psicometrico_{candidato[0]}"
-                        )
-
-                elif psicometrico_path:
-
-                    st.warning("Psicométrico no disponible en Render.")
+                    st.rerun()
 
             if st.button(
                 "🗑️ Eliminar",
                 key=f"del_{candidato[0]}"
             ):
 
-                cursor.execute(
-                    "DELETE FROM candidatos WHERE id=?",
-                    (candidato[0],)
-                )
+                cursor.execute("""
+                    DELETE FROM candidatos
+                    WHERE id=?
+                """, (
+                    candidato[0],
+                ))
 
                 guardar()
+
                 st.rerun()
 
             st.markdown(
@@ -639,4 +472,6 @@ def candidatos_page(cursor, guardar, calcular_match):
 
     else:
 
-        st.info("No hay candidatos registrados")
+        st.info(
+            "No hay candidatos registrados"
+        )

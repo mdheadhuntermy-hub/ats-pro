@@ -1,5 +1,7 @@
 import streamlit as st
 
+from services.backup_service import crear_backup
+
 
 def configuracion_page(cursor, guardar):
 
@@ -20,22 +22,51 @@ def configuracion_page(cursor, guardar):
 
     st.divider()
 
+    st.subheader("💾 Backup del Sistema")
+
+    if st.button("Crear Backup"):
+
+        backup = crear_backup()
+
+        if backup:
+
+            st.success(
+                f"Backup creado: {backup}"
+            )
+
+        else:
+
+            st.error(
+                "No se encontró la base de datos"
+            )
+
+    st.divider()
+
     if st.session_state.rol != "Administrador":
 
-        st.info("Solo el administrador puede crear o eliminar usuarios.")
+        st.info(
+            "Solo el administrador puede crear o eliminar usuarios."
+        )
+
         return
 
     st.subheader("👥 Usuarios del sistema")
 
     nuevo_usuario = st.text_input("Nuevo usuario")
-    nuevo_password = st.text_input("Contraseña", type="password")
+
+    nuevo_password = st.text_input(
+        "Contraseña",
+        type="password"
+    )
 
     nuevo_rol = st.selectbox(
         "Rol",
         [
             "Administrador",
             "RH",
-            "Contabilidad"
+            "Contabilidad",
+            "Cliente",
+            "Director RH"
         ]
     )
 
@@ -55,7 +86,9 @@ def configuracion_page(cursor, guardar):
         ))
 
         guardar()
+
         st.success("✅ Usuario creado")
+
         st.rerun()
 
     usuarios = cursor.execute("""
@@ -87,6 +120,7 @@ def configuracion_page(cursor, guardar):
                 )
 
                 guardar()
+
                 st.rerun()
 
         st.markdown(

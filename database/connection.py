@@ -141,5 +141,15 @@ def init_db():
             "Dios2026",
             "Administrador"
         ))
-
+    cursor.execute("""
+CREATE TABLE IF NOT EXISTS historial_candidatos(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    candidato_id INTEGER,
+    candidato TEXT,
+    accion TEXT,
+    detalle TEXT,
+    usuario TEXT,
+    fecha TEXT
+)
+""")
     conn.commit()

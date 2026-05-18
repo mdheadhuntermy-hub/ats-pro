@@ -1,2 +1,15 @@
+[theme]
+
+primaryColor="#2563eb"
+
+backgroundColor="#020617"
+
+secondaryBackgroundColor="#0f172a"
+
+textColor="#f8fafc"
+
+font="sans serif"
+
 [server]
-fileWatcherType = "none"
+
+maxUploadSize = 200

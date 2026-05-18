@@ -4,22 +4,12 @@ import pandas as pd
 
 def dashboard_page(cursor):
 
-    rol = st.session_state.get("rol", "")
+    st.title("📊 Dashboard Ejecutivo")
 
-    st.title("MDHEADHUNTER ATS PRO ELITE")
-    st.subheader("Dashboard Ejecutivo")
-
-    total_vacantes = cursor.execute("""
-        SELECT COUNT(*) FROM vacantes
-    """).fetchone()[0]
-
-    total_candidatos = cursor.execute("""
-        SELECT COUNT(*) FROM candidatos
-    """).fetchone()[0]
-
-    total_entrevistas = cursor.execute("""
-        SELECT COUNT(*) FROM entrevistas
-    """).fetchone()[0]
+    total_clientes = cursor.execute("SELECT COUNT(*) FROM clientes").fetchone()[0]
+    total_vacantes = cursor.execute("SELECT COUNT(*) FROM vacantes").fetchone()[0]
+    total_candidatos = cursor.execute("SELECT COUNT(*) FROM candidatos").fetchone()[0]
+    total_entrevistas = cursor.execute("SELECT COUNT(*) FROM entrevistas").fetchone()[0]
 
     contratados = cursor.execute("""
         SELECT COUNT(*) FROM candidatos
@@ -31,86 +21,99 @@ def dashboard_page(cursor):
         WHERE estado='Rechazado'
     """).fetchone()[0]
 
-    c1, c2, c3 = st.columns(3)
+    ingresos = cursor.execute("""
+        SELECT COALESCE(SUM(total),0)
+        FROM facturas
+    """).fetchone()[0]
 
-    c1.metric("Vacantes", total_vacantes)
-    c2.metric("Candidatos", total_candidatos)
-    c3.metric("Entrevistas", total_entrevistas)
+    utilidad = cursor.execute("""
+        SELECT COALESCE(SUM(utilidad),0)
+        FROM facturas
+    """).fetchone()[0]
 
-    c4, c5 = st.columns(2)
+    st.subheader("ATS PRO ELITE • Executive Analytics")
+    st.caption("Indicadores ejecutivos de reclutamiento y operación RH.")
 
-    c4.metric("Contratados", contratados)
-    c5.metric("Rechazados", rechazados)
+    c1, c2, c3, c4 = st.columns(4)
 
-    if rol == "Administrador":
+    c1.metric("🏢 Clientes", total_clientes)
+    c2.metric("💼 Vacantes", total_vacantes)
+    c3.metric("👥 Candidatos", total_candidatos)
+    c4.metric("📅 Entrevistas", total_entrevistas)
 
-        total_clientes = cursor.execute("""
-            SELECT COUNT(*) FROM clientes
-        """).fetchone()[0]
+    c5, c6, c7, c8 = st.columns(4)
 
-        ingresos = cursor.execute("""
-            SELECT COALESCE(SUM(total),0)
-            FROM facturas
-        """).fetchone()[0]
-
-        utilidad = cursor.execute("""
-            SELECT COALESCE(SUM(utilidad),0)
-            FROM facturas
-        """).fetchone()[0]
-
-        st.divider()
-        st.subheader("💰 Resumen Administrativo")
-
-        c6, c7, c8 = st.columns(3)
-
-        c6.metric("Clientes", total_clientes)
-        c7.metric("Facturación", f"${ingresos:,.2f}")
-        c8.metric("Utilidad", f"${utilidad:,.2f}")
+    c5.metric("🏆 Contratados", contratados)
+    c6.metric("❌ Rechazados", rechazados)
+    c7.metric("💰 Facturación", f"${ingresos:,.0f}")
+    c8.metric("📈 Utilidad", f"${utilidad:,.0f}")
 
     st.divider()
 
-    st.subheader("🎯 Top Candidatos")
+    col1, col2 = st.columns(2)
 
-    candidatos = cursor.execute("""
-        SELECT nombre, vacante, score, estado
-        FROM candidatos
-        ORDER BY score DESC
-        LIMIT 10
-    """).fetchall()
+    with col1:
+        st.subheader("📊 Pipeline Reclutamiento")
 
-    if candidatos:
-        df = pd.DataFrame(
-            candidatos,
-            columns=["Nombre", "Vacante", "Match", "Estado"]
-        )
+        pipeline = cursor.execute("""
+            SELECT estado, COUNT(*)
+            FROM candidatos
+            GROUP BY estado
+        """).fetchall()
 
-        st.dataframe(
-            df,
-            width="stretch"
-        )
-    else:
-        st.info("No hay candidatos")
+        if pipeline:
+            df_pipeline = pd.DataFrame(
+                pipeline,
+                columns=["Estado", "Cantidad"]
+            )
+
+            st.bar_chart(
+                df_pipeline,
+                x="Estado",
+                y="Cantidad"
+            )
+        else:
+            st.info("Sin información")
+
+    with col2:
+        st.subheader("🏅 Top Candidatos")
+
+        candidatos = cursor.execute("""
+            SELECT nombre, vacante, score
+            FROM candidatos
+            ORDER BY score DESC
+            LIMIT 10
+        """).fetchall()
+
+        if candidatos:
+            df = pd.DataFrame(
+                candidatos,
+                columns=["Nombre", "Vacante", "Match IA"]
+            )
+
+            st.dataframe(
+                df,
+                use_container_width=True
+            )
+        else:
+            st.info("Sin candidatos")
 
     st.divider()
 
-    st.subheader("📈 Pipeline Reclutamiento")
+    st.subheader("📅 Entrevistas Recientes")
 
-    pipeline = cursor.execute("""
-        SELECT estado, COUNT(*)
-        FROM candidatos
-        GROUP BY estado
+    entrevistas = cursor.execute("""
+        SELECT candidato, fecha, entrevistador, resultado
+        FROM entrevistas
+        ORDER BY id DESC
+        LIMIT 5
     """).fetchall()
 
-    if pipeline:
-        df_pipeline = pd.DataFrame(
-            pipeline,
-            columns=["Estado", "Cantidad"]
-        )
-
-        st.bar_chart(
-            df_pipeline,
-            x="Estado",
-            y="Cantidad"
-        )
+    if entrevistas:
+        for entrevista in entrevistas:
+            st.info(
+                f"👤 {entrevista[0]} | 📅 {entrevista[1]} | "
+                f"🧑‍💼 {entrevista[2]} | 📌 {entrevista[3]}"
+            )
     else:
-        st.info("No hay datos para mostrar")
+        st.info("No hay entrevistas recientes")

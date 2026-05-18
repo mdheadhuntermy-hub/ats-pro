@@ -5,6 +5,7 @@ import os
 import base64
 
 from streamlit_option_menu import option_menu
+
 from auth.login import login
 from database.connection import get_connection, get_cursor, init_db
 
@@ -12,10 +13,12 @@ from modules.dashboard import dashboard_page
 from modules.clientes import clientes_page
 from modules.vacantes import vacantes_page
 from modules.candidatos import candidatos_page
+from modules.kanban import kanban_page
 from modules.entrevistas import entrevistas_page
 from modules.contabilidad import contabilidad_page
 from modules.reportes import reportes_page
 from modules.configuracion import configuracion_page
+from modules.portal_cliente import portal_cliente_page
 
 
 st.set_page_config(
@@ -39,10 +42,7 @@ st.markdown(f"""
 <style>
 .stApp {{
     background:
-    linear-gradient(
-        rgba(3,8,20,0.88),
-        rgba(3,8,20,0.88)
-    ),
+    linear-gradient(rgba(3,8,20,0.88), rgba(3,8,20,0.88)),
     url("data:image/jpg;base64,{bg}");
     background-size: cover;
     background-position: center;
@@ -63,7 +63,9 @@ h1,h2,h3,h4,h5,h6,p,span,label,div {{
 }}
 
 .stTextInput input,
-.stTextArea textarea {{
+.stTextArea textarea,
+.stNumberInput input,
+.stDateInput input {{
     background-color: rgba(15,23,42,0.95) !important;
     color: white !important;
     border-radius:14px !important;
@@ -85,14 +87,6 @@ h1,h2,h3,h4,h5,h6,p,span,label,div {{
     fill: white !important;
 }}
 
-.stSelectbox span {{
-    color: white !important;
-}}
-
-.stSelectbox input {{
-    color: white !important;
-}}
-
 .stButton button {{
     width:100%;
     border:none;
@@ -112,7 +106,6 @@ h1,h2,h3,h4,h5,h6,p,span,label,div {{
     backdrop-filter:blur(14px);
 }}
 
-
 div[data-testid="metric-container"] {{
     background:rgba(255,255,255,0.05);
     border:1px solid rgba(255,255,255,0.08);
@@ -120,44 +113,13 @@ div[data-testid="metric-container"] {{
     padding:22px;
 }}
 
-.stNumberInput input,
-.stDateInput input {{
-    background-color: rgba(15,23,42,0.95) !important;
-    color: white !important;
-    border-radius:14px !important;
-    border:1px solid rgba(255,255,255,0.20) !important;
-}}
-
-.stNumberInput button,
-.stDateInput button {{
-    background-color: rgba(15,23,42,0.95) !important;
-    color: white !important;
-}}
-
-div[data-baseweb="popover"] {{
-    background-color: rgba(15,23,42,0.98) !important;
-    color: white !important;
-}}
-
-div[data-baseweb="popover"] * {{
-    background-color: rgba(15,23,42,0.98) !important;
-    color: white !important;
-}}
-
-ul[role="listbox"] {{
-    background-color: rgba(15,23,42,0.98) !important;
-}}
-
+div[data-baseweb="popover"],
+div[data-baseweb="popover"] *,
+ul[role="listbox"],
 li[role="option"] {{
     background-color: rgba(15,23,42,0.98) !important;
     color: white !important;
 }}
-
-li[role="option"]:hover {{
-    background-color: rgba(37,99,235,0.55) !important;
-    color: white !important;
-}}
-
 </style>
 """, unsafe_allow_html=True)
 
@@ -211,105 +173,117 @@ def calcular_match(vacante, cv):
 login(cursor)
 
 
+rol = st.session_state.get("rol", "")
+
+if rol == "Administrador":
+    opciones_menu = [
+        "Dashboard",
+        "Clientes",
+        "Vacantes",
+        "Candidatos",
+        "Kanban",
+        "Entrevistas",
+        "Contabilidad",
+        "Reportes",
+        "Configuración"
+    ]
+
+elif rol == "RH":
+    opciones_menu = [
+        "Dashboard",
+        "Vacantes",
+        "Candidatos",
+        "Kanban",
+        "Entrevistas",
+        "Reportes",
+        "Configuración"
+    ]
+
+elif rol == "Contabilidad":
+    opciones_menu = [
+        "Dashboard",
+        "Clientes",
+        "Contabilidad",
+        "Reportes",
+        "Configuración"
+    ]
+
+elif rol == "Cliente":
+    opciones_menu = [
+        "Portal Cliente",
+        "Configuración"
+    ]
+
+else:
+    opciones_menu = [
+        "Dashboard",
+        "Configuración"
+    ]
+
+
+iconos = {
+    "Dashboard": "speedometer2",
+    "Clientes": "building",
+    "Vacantes": "briefcase",
+    "Candidatos": "people",
+    "Kanban": "kanban",
+    "Entrevistas": "calendar-check",
+    "Contabilidad": "cash-coin",
+    "Reportes": "bar-chart-line",
+    "Portal Cliente": "person-badge",
+    "Configuración": "gear"
+}
+
+iconos_menu = [
+    iconos.get(opcion, "circle")
+    for opcion in opciones_menu
+]
+
+
 with st.sidebar:
 
     if os.path.exists("assets/logo.png"):
-        st.image(
-            "assets/logo.png",
-            width=180
-        )
+        st.image("assets/logo.png", width=170)
 
-    st.markdown("""
-    <h1>ATS PRO</h1>
-    <p style='color:#94a3b8;'>ELITE 2025</p>
-    """, unsafe_allow_html=True)
+    st.subheader("MDHEADHUNTER")
+    st.caption("ATS PRO ELITE")
+    st.divider()
 
-    rol = st.session_state.get(
-        "rol",
-        "Administrador"
-    )
+    st.write(f"👤 Usuario: {st.session_state.usuario}")
+    st.write(f"🔐 Rol: {st.session_state.rol}")
 
-    if rol == "Administrador":
-
-        opciones_menu = [
-            "Dashboard",
-            "Clientes",
-            "Vacantes",
-            "Candidatos",
-            "Entrevistas",
-            "Contabilidad",
-            "Reportes",
-            "Configuración"
-        ]
-
-    elif rol == "RH":
-
-        opciones_menu = [
-            "Dashboard",
-            "Vacantes",
-            "Candidatos",
-            "Entrevistas",
-            "Reportes",
-            "Configuración"
-        ]
-
-    elif rol == "Contabilidad":
-
-        opciones_menu = [
-            "Dashboard",
-            "Clientes",
-            "Contabilidad",
-            "Reportes",
-            "Configuración"
-        ]
-
-    else:
-
-        opciones_menu = [
-            "Dashboard",
-            "Configuración"
-        ]
+    st.divider()
 
     menu = option_menu(
-    menu_title=None,
-    options=opciones_menu,
-    icons=[
-        "speedometer2",
-        "building",
-        "briefcase",
-        "people",
-        "calendar-check",
-        "cash-coin",
-        "bar-chart-line",
-        "gear"
-    ],
-    default_index=0,
-    styles={
-        "container": {
-            "padding": "6px",
-            "background-color": "rgba(15,23,42,0.92)",
-            "border-radius": "18px"
-        },
-        "icon": {
-            "color": "#38bdf8",
-            "font-size": "18px"
-        },
-        "nav-link": {
-            "font-size": "15px",
-            "text-align": "left",
-            "margin": "5px 0",
-            "border-radius": "12px",
-            "color": "#e5e7eb",
-            "background-color": "rgba(15,23,42,0.55)",
-            "--hover-color": "rgba(37,99,235,0.30)"
-        },
-        "nav-link-selected": {
-            "background": "linear-gradient(90deg,#2563eb,#7c3aed)",
-            "color": "#ffffff",
-            "font-weight": "700"
+        menu_title=None,
+        options=opciones_menu,
+        icons=iconos_menu,
+        menu_icon="cast",
+        default_index=0,
+        styles={
+            "container": {
+                "padding": "8px",
+                "background-color": "#0f172a",
+                "border-radius": "18px"
+            },
+            "icon": {
+                "color": "#38bdf8",
+                "font-size": "18px"
+            },
+            "nav-link": {
+                "font-size": "15px",
+                "text-align": "left",
+                "margin": "5px",
+                "padding": "12px",
+                "border-radius": "12px",
+                "--hover-color": "#1e293b"
+            },
+            "nav-link-selected": {
+                "background-color": "#2563eb"
+            }
         }
-    }
-)
+    )
+
 
 if menu == "Dashboard":
     dashboard_page(cursor)
@@ -323,6 +297,9 @@ elif menu == "Vacantes":
 elif menu == "Candidatos":
     candidatos_page(cursor, guardar, calcular_match)
 
+elif menu == "Kanban":
+    kanban_page(cursor, guardar)
+
 elif menu == "Entrevistas":
     entrevistas_page(cursor, guardar)
 
@@ -334,3 +311,6 @@ elif menu == "Reportes":
 
 elif menu == "Configuración":
     configuracion_page(cursor, guardar)
+
+elif menu == "Portal Cliente":
+    portal_cliente_page(cursor, guardar)
