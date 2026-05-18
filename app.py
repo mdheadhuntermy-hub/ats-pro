@@ -51,7 +51,6 @@ st.markdown(f"""
 
 #MainMenu {{visibility:hidden;}}
 footer {{visibility:hidden;}}
-header {{visibility:hidden;}}
 
 section[data-testid="stSidebar"] {{
     min-width: 280px !important;
