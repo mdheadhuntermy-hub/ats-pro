@@ -54,8 +54,17 @@ footer {{visibility:hidden;}}
 header {{visibility:hidden;}}
 
 section[data-testid="stSidebar"] {{
-    background: rgba(5,10,20,0.95);
+    display: block !important;
+    visibility: visible !important;
+    min-width: 280px !important;
+    width: 280px !important;
+    background: rgba(5,10,20,0.95) !important;
     border-right:1px solid rgba(255,255,255,0.08);
+}}
+
+section[data-testid="stSidebar"] > div {
+    display: block !important;
+    visibility: visible !important;
 }}
 
 h1,h2,h3,h4,h5,h6,p,span,label,div {{
