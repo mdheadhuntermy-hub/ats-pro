@@ -54,15 +54,13 @@ footer {{visibility:hidden;}}
 header {{visibility:hidden;}}
 
 section[data-testid="stSidebar"] {{
-    display: block !important;
-    visibility: visible !important;
     min-width: 280px !important;
     width: 280px !important;
     background: rgba(5,10,20,0.95) !important;
-    border-right:1px solid rgba(255,255,255,0.08);
+    border-right:1px solid rgba(255,255,255,0.08) !important;
 }}
 
-section[data-testid="stSidebar"] > div {
+section[data-testid="stSidebar"] > div {{
     display: block !important;
     visibility: visible !important;
 }}
