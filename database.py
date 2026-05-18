@@ -41,6 +41,38 @@ CREATE TABLE IF NOT EXISTS candidatos(
 )
 ''')
 
+try:
+    cursor.execute("""
+        ALTER TABLE candidatos
+        ADD COLUMN seguridad_pdf TEXT
+    """)
+except:
+    pass
+
+try:
+    cursor.execute("""
+        ALTER TABLE candidatos
+        ADD COLUMN dictamen_seguridad TEXT
+    """)
+except:
+    pass
+
+try:
+    cursor.execute("""
+        ALTER TABLE candidatos
+        ADD COLUMN psicometrico_pdf TEXT
+    """)
+except:
+    pass
+
+try:
+    cursor.execute("""
+        ALTER TABLE candidatos
+        ADD COLUMN dictamen_psicometrico TEXT
+    """)
+except:
+    pass
+
 cursor.execute('''
 CREATE TABLE IF NOT EXISTS entrevistas(
     id INTEGER PRIMARY KEY AUTOINCREMENT,

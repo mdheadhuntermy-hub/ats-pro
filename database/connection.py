@@ -23,14 +23,20 @@ def get_cursor():
     return conn.cursor()
 
 
+def agregar_columna(cursor, tabla, columna, tipo):
+
+    try:
+        cursor.execute(
+            f"ALTER TABLE {tabla} ADD COLUMN {columna} {tipo}"
+        )
+    except:
+        pass
+
+
 def init_db():
 
     conn = get_connection()
     cursor = conn.cursor()
-
-    # =========================================
-    # USUARIOS
-    # =========================================
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS usuarios(
@@ -40,10 +46,6 @@ def init_db():
         rol TEXT
     )
     """)
-
-    # =========================================
-    # CLIENTES
-    # =========================================
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS clientes(
@@ -55,10 +57,6 @@ def init_db():
     )
     """)
 
-    # =========================================
-    # VACANTES
-    # =========================================
-
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS vacantes(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -67,10 +65,6 @@ def init_db():
         descripcion TEXT
     )
     """)
-
-    # =========================================
-    # CANDIDATOS
-    # =========================================
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS candidatos(
@@ -83,13 +77,19 @@ def init_db():
         estado TEXT,
         vacante TEXT,
         pdf TEXT,
-        dictamen TEXT
+        dictamen TEXT,
+        seguridad_pdf TEXT,
+        dictamen_seguridad TEXT,
+        psicometrico_pdf TEXT,
+        dictamen_psicometrico TEXT
     )
     """)
 
-    # =========================================
-    # ENTREVISTAS
-    # =========================================
+    agregar_columna(cursor, "candidatos", "dictamen", "TEXT")
+    agregar_columna(cursor, "candidatos", "seguridad_pdf", "TEXT")
+    agregar_columna(cursor, "candidatos", "dictamen_seguridad", "TEXT")
+    agregar_columna(cursor, "candidatos", "psicometrico_pdf", "TEXT")
+    agregar_columna(cursor, "candidatos", "dictamen_psicometrico", "TEXT")
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS entrevistas(
@@ -103,10 +103,6 @@ def init_db():
         resultado TEXT
     )
     """)
-
-    # =========================================
-    # FACTURAS
-    # =========================================
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS facturas(
@@ -124,10 +120,6 @@ def init_db():
         utilidad REAL
     )
     """)
-
-    # =========================================
-    # CREAR ADMIN
-    # =========================================
 
     usuario_admin = cursor.execute("""
         SELECT *
@@ -149,19 +141,5 @@ def init_db():
             "Dios2026",
             "Administrador"
         ))
-
-    # =========================================
-    # AGREGAR DICTAMEN SI NO EXISTE
-    # =========================================
-
-    try:
-
-        cursor.execute("""
-            ALTER TABLE candidatos
-            ADD COLUMN dictamen TEXT
-        """)
-
-    except:
-        pass
 
     conn.commit()
