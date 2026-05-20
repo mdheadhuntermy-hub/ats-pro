@@ -9,6 +9,7 @@ from streamlit_option_menu import option_menu
 from auth.login import login
 from database.connection import get_connection, get_cursor, init_db
 
+from modules.banco_cv import banco_cv_page
 from modules.dashboard import dashboard_page
 from modules.clientes import clientes_page
 from modules.vacantes import vacantes_page
@@ -169,6 +170,7 @@ if rol == "Administrador":
         "Clientes",
         "Vacantes",
         "Candidatos",
+	"Banco CV",
         "Kanban",
         "Entrevistas",
         "Contabilidad",
@@ -214,6 +216,7 @@ iconos = {
     "Clientes": "building",
     "Vacantes": "briefcase",
     "Candidatos": "people",
+    "Banco CV": "folder",
     "Kanban": "kanban",
     "Entrevistas": "calendar-check",
     "Contabilidad": "cash-coin",
@@ -284,6 +287,9 @@ elif menu == "Vacantes":
 
 elif menu == "Candidatos":
     candidatos_page(cursor, guardar, calcular_match)
+
+elif menu == "Banco CV":
+    banco_cv_page(cursor, guardar)
 
 elif menu == "Kanban":
     kanban_page(cursor, guardar)

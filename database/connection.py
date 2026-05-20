@@ -152,4 +152,21 @@ CREATE TABLE IF NOT EXISTS historial_candidatos(
     fecha TEXT
 )
 """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS banco_cv(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nombre TEXT,
+        correo TEXT,
+        telefono TEXT,
+        ciudad TEXT,
+        perfil TEXT,
+        area TEXT,
+        skills TEXT,
+        salario TEXT,
+        disponibilidad TEXT,
+        comentarios TEXT,
+        pdf TEXT
+    )
+    """)
     conn.commit()
