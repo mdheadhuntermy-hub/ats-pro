@@ -3,56 +3,89 @@ import os
 import uuid
 
 from services.interview_ai import generar_entrevista_ia
-from utils.pdf_generator import (
-    generar_pdf_dictamen,
-    generar_pdf_simple_dictamen
-)
+from utils.pdf_generator import generar_pdf_dictamen, generar_pdf_simple_dictamen
 from services.pdf_service import extraer_texto_pdf
+
+
+def ajustar_score_por_comentarios(score, skills):
+
+    texto = (skills or "").lower()
+
+    negativos = [
+        "sin experiencia",
+        "no tiene experiencia",
+        "no cuenta con experiencia",
+        "no domina",
+        "no sabe",
+        "no conoce",
+        "junior",
+        "poca experiencia",
+        "mala comunicación",
+        "inestable",
+        "rotación",
+        "conflictivo"
+    ]
+
+    positivos = [
+        "experiencia comprobable",
+        "excelente comunicación",
+        "liderazgo",
+        "estable",
+        "experiencia real",
+        "alto dominio",
+        "domina",
+        "especialista",
+        "senior",
+        "buen perfil",
+        "recomendable"
+    ]
+
+    for palabra in negativos:
+        if palabra in texto:
+            score -= 18
+
+    for palabra in positivos:
+        if palabra in texto:
+            score += 10
+
+    return max(0, min(int(score), 100))
 
 
 def generar_dictamen(score, descripcion_vacante, texto_cv, skills):
 
-    if score >= 80:
+    if score >= 85:
+        resultado = "ALTAMENTE RECOMENDABLE"
+        conclusion = "El candidato presenta alta compatibilidad con la vacante."
+    elif score >= 70:
         resultado = "RECOMENDABLE"
-        conclusion = (
-            "El candidato presenta una alta compatibilidad con la vacante. "
-            "Se recomienda avanzar a entrevista o siguiente etapa."
-        )
-
-    elif score >= 60:
-        resultado = "PARCIALMENTE RECOMENDABLE"
-        conclusion = (
-            "El candidato presenta compatibilidad media con la vacante."
-        )
-
+        conclusion = "El candidato cumple con varios criterios relevantes del puesto."
+    elif score >= 55:
+        resultado = "RECOMENDABLE CON RESERVAS"
+        conclusion = "El candidato requiere validación adicional en entrevista RH."
     elif score >= 40:
         resultado = "EN OBSERVACIÓN"
-        conclusion = (
-            "El candidato requiere validación adicional."
-        )
-
+        conclusion = "El candidato muestra compatibilidad parcial."
     else:
         resultado = "NO RECOMENDABLE"
-        conclusion = (
-            "El candidato presenta baja compatibilidad."
-        )
+        conclusion = "El candidato presenta baja compatibilidad inicial."
 
-    dictamen = f"""
+    return f"""
 Resultado IA: {resultado}
 
 Match estimado: {score}%
 
-Análisis:
-La evaluación considera la vacante, CV y comentarios RH.
+Criterios considerados:
+- Descripción de la vacante
+- Contenido del CV
+- Skills / Observaciones RH
+- Señales positivas o negativas agregadas por RH
 
-Comentarios RH:
-{skills if skills else "Sin comentarios"}
+Observaciones RH:
+{skills if skills else "Sin observaciones RH capturadas."}
 
 Conclusión:
 {conclusion}
-"""
-
-    return dictamen.strip()
+""".strip()
 
 
 def generar_dictamen_seguridad(texto_seguridad):
@@ -62,13 +95,13 @@ def generar_dictamen_seguridad(texto_seguridad):
     riesgo = "BAJO"
     resultado = "APTO"
 
-    if (
-        "antecedentes" in texto or
-        "riesgo" in texto or
-        "negativo" in texto
-    ):
+    if "antecedentes" in texto or "riesgo" in texto or "negativo" in texto:
         riesgo = "REVISAR"
         resultado = "APTO CON OBSERVACIONES"
+
+    if "no se han encontrado registros" in texto or "sin observaciones" in texto:
+        riesgo = "BAJO"
+        resultado = "APTO"
 
     return f"""
 DICTAMEN DE SEGURIDAD
@@ -77,7 +110,7 @@ Resultado: {resultado}
 Riesgo: {riesgo}
 
 Conclusión:
-Se recomienda validación RH final.
+Se recomienda validación RH final conforme a política interna.
 """.strip()
 
 
@@ -87,11 +120,9 @@ def generar_dictamen_psicometrico(texto_psicometrico):
 
     resultado = "RECOMENDABLE"
 
-    if (
-        "no recomendable" in texto or
-        "agresividad" in texto or
-        "inestabilidad" in texto
-    ):
+    if "no recomendable" in texto:
+        resultado = "NO RECOMENDABLE"
+    elif "agresividad" in texto or "inestabilidad" in texto or "riesgo" in texto:
         resultado = "RECOMENDABLE CON RESERVAS"
 
     return f"""
@@ -100,27 +131,8 @@ DICTAMEN PSICOMÉTRICO
 Resultado: {resultado}
 
 Conclusión:
-Evaluación basada en resultados psicométricos cargados.
+Evaluación basada en resultados psicométricos cargados. Se recomienda complementar con entrevista RH.
 """.strip()
-
-
-def ajustar_score_por_comentarios(score, skills):
-
-    texto = (skills or "").lower()
-
-    palabras_negativas = [
-        "sin experiencia",
-        "no tiene experiencia",
-        "junior",
-        "no domina"
-    ]
-
-    for palabra in palabras_negativas:
-
-        if palabra in texto:
-            score -= 25
-
-    return max(0, min(score, 100))
 
 
 def guardar_archivo_pdf(archivo, carpeta):
@@ -132,11 +144,7 @@ def guardar_archivo_pdf(archivo, carpeta):
         os.makedirs(carpeta)
 
     filename = f"{uuid.uuid4()}.pdf"
-
-    ruta = os.path.join(
-        carpeta,
-        filename
-    )
+    ruta = os.path.join(carpeta, filename)
 
     with open(ruta, "wb") as f:
         f.write(archivo.read())
@@ -144,6 +152,45 @@ def guardar_archivo_pdf(archivo, carpeta):
     texto = extraer_texto_pdf(ruta)
 
     return ruta, texto
+
+
+def calcular_score_profesional(calcular_match, descripcion_vacante, texto_cv, skills):
+
+    score_cv = calcular_match(
+        descripcion_vacante,
+        texto_cv
+    )
+
+    score_rh = calcular_match(
+        descripcion_vacante,
+        skills
+    )
+
+    texto_completo = f"""
+    CV:
+    {texto_cv}
+
+    OBSERVACIONES RH:
+    {skills}
+    """
+
+    score_contexto = calcular_match(
+        descripcion_vacante,
+        texto_completo
+    )
+
+    score = int(
+        (score_cv * 0.40) +
+        (score_rh * 0.40) +
+        (score_contexto * 0.20)
+    )
+
+    score = ajustar_score_por_comentarios(
+        score,
+        skills
+    )
+
+    return score
 
 
 def candidatos_page(cursor, guardar, calcular_match):
@@ -155,7 +202,8 @@ def candidatos_page(cursor, guardar, calcular_match):
     telefono = st.text_input("Teléfono")
 
     skills = st.text_area(
-        "Skills / Comentarios RH"
+        "Skills / Comentarios RH",
+        help="Aquí agrega todo lo que el CV no diga: experiencia real, actitud, liderazgo, estabilidad, red flags, dominio técnico, etc."
     )
 
     estado = st.selectbox(
@@ -178,27 +226,13 @@ def candidatos_page(cursor, guardar, calcular_match):
     lista_vacantes = [v[0] for v in vacantes_db]
 
     if lista_vacantes:
-        vacante = st.selectbox(
-            "Vacante",
-            lista_vacantes
-        )
+        vacante = st.selectbox("Vacante", lista_vacantes)
     else:
         vacante = ""
 
-    cv_pdf = st.file_uploader(
-        "Subir CV PDF",
-        type=["pdf"]
-    )
-
-    seguridad_pdf = st.file_uploader(
-        "📄 Estudio de Seguridad PDF",
-        type=["pdf"]
-    )
-
-    psicometrico_pdf = st.file_uploader(
-        "🧠 Pruebas Psicométricas PDF",
-        type=["pdf"]
-    )
+    cv_pdf = st.file_uploader("Subir CV PDF", type=["pdf"])
+    seguridad_pdf = st.file_uploader("📄 Estudio de Seguridad PDF", type=["pdf"])
+    psicometrico_pdf = st.file_uploader("🧠 Pruebas Psicométricas PDF", type=["pdf"])
 
     if st.button("Guardar Candidato"):
 
@@ -210,44 +244,16 @@ def candidatos_page(cursor, guardar, calcular_match):
             vacante,
         )).fetchone()
 
-        descripcion_vacante = (
-            datos_vacante[0]
-            if datos_vacante
-            else vacante
-        )
+        descripcion_vacante = datos_vacante[0] if datos_vacante else vacante
 
-        pdf_path, texto_cv = guardar_archivo_pdf(
-            cv_pdf,
-            "cv"
-        )
+        pdf_path, texto_cv = guardar_archivo_pdf(cv_pdf, "cv")
+        seguridad_path, texto_seguridad = guardar_archivo_pdf(seguridad_pdf, "seguridad")
+        psicometrico_path, texto_psicometrico = guardar_archivo_pdf(psicometrico_pdf, "psicometricos")
 
-        seguridad_path, texto_seguridad = guardar_archivo_pdf(
-            seguridad_pdf,
-            "seguridad"
-        )
-
-        psicometrico_path, texto_psicometrico = guardar_archivo_pdf(
-            psicometrico_pdf,
-            "psicometricos"
-        )
-
-        score_cv = calcular_match(
+        score = calcular_score_profesional(
+            calcular_match,
             descripcion_vacante,
-            texto_cv
-        )
-
-        score_skills = calcular_match(
-            descripcion_vacante,
-            skills
-        )
-
-        score = int(
-            (score_cv * 0.7) +
-            (score_skills * 0.3)
-        )
-
-        score = ajustar_score_por_comentarios(
-            score,
+            texto_cv,
             skills
         )
 
@@ -258,13 +264,8 @@ def candidatos_page(cursor, guardar, calcular_match):
             skills
         )
 
-        dictamen_seguridad = generar_dictamen_seguridad(
-            texto_seguridad
-        )
-
-        dictamen_psicometrico = generar_dictamen_psicometrico(
-            texto_psicometrico
-        )
+        dictamen_seguridad = generar_dictamen_seguridad(texto_seguridad)
+        dictamen_psicometrico = generar_dictamen_psicometrico(texto_psicometrico)
 
         cursor.execute("""
             INSERT INTO candidatos(
@@ -300,11 +301,7 @@ def candidatos_page(cursor, guardar, calcular_match):
         ))
 
         guardar()
-
-        st.success(
-            "✅ Candidato guardado"
-        )
-
+        st.success("✅ Candidato guardado con evaluación IA mejorada")
         st.rerun()
 
     st.divider()
@@ -319,19 +316,16 @@ def candidatos_page(cursor, guardar, calcular_match):
 
         for candidato in candidatos:
 
-            dictamen = candidato[9]
-            dictamen_seguridad = candidato[11]
-            dictamen_psicometrico = candidato[13]
+            dictamen = candidato[9] if len(candidato) > 9 else ""
+            dictamen_seguridad = candidato[11] if len(candidato) > 11 else ""
+            dictamen_psicometrico = candidato[13] if len(candidato) > 13 else ""
 
-            st.markdown(
-                "<div class='card'>",
-                unsafe_allow_html=True
-            )
+            st.markdown("<div class='card'>", unsafe_allow_html=True)
 
             st.write(f"👤 Nombre: {candidato[1]}")
             st.write(f"📧 Correo: {candidato[2]}")
             st.write(f"📱 Teléfono: {candidato[3]}")
-            st.write(f"🛠 Skills: {candidato[4]}")
+            st.write(f"🛠 Observaciones RH: {candidato[4]}")
             st.write(f"🎯 Match IA: {candidato[5]}%")
             st.write(f"📌 Estado: {candidato[6]}")
             st.write(f"💼 Vacante: {candidato[7]}")
@@ -344,57 +338,37 @@ def candidatos_page(cursor, guardar, calcular_match):
                     candidato[5]
                 )
 
-                st.subheader(
-                    "Preguntas sugeridas"
-                )
+                st.subheader("Preguntas sugeridas")
 
                 for pregunta in entrevista_ia["preguntas"]:
-
                     st.write(f"• {pregunta}")
 
-                st.subheader(
-                    "Fortalezas detectadas"
-                )
+                st.subheader("Fortalezas detectadas")
 
                 for fortaleza in entrevista_ia["fortalezas"]:
-
                     st.success(fortaleza)
 
-                st.subheader(
-                    "Riesgos detectados"
-                )
+                st.subheader("Riesgos detectados")
 
                 for riesgo in entrevista_ia["riesgos"]:
-
                     st.warning(riesgo)
 
             if dictamen:
 
-                with st.expander(
-                    "🧠 Ver Dictamen IA"
-                ):
-
+                with st.expander("🧠 Ver Dictamen IA"):
                     st.text(dictamen)
 
             if dictamen_seguridad:
 
-                with st.expander(
-                    "🛡️ Dictamen Seguridad"
-                ):
-
+                with st.expander("🛡️ Dictamen Seguridad"):
                     st.text(dictamen_seguridad)
 
             if dictamen_psicometrico:
 
-                with st.expander(
-                    "🧠 Dictamen Psicométrico"
-                ):
-
+                with st.expander("🧠 Dictamen Psicométrico"):
                     st.text(dictamen_psicometrico)
 
-            with st.expander(
-                "✏️ Editar Candidato"
-            ):
+            with st.expander("✏️ Editar Candidato"):
 
                 nuevo_nombre = st.text_input(
                     "Nombre",
@@ -415,13 +389,13 @@ def candidatos_page(cursor, guardar, calcular_match):
                 )
 
                 nuevo_skills = st.text_area(
-                    "Skills",
+                    "Skills / Comentarios RH",
                     value=candidato[4],
                     key=f"s_{candidato[0]}"
                 )
 
                 if st.button(
-                    "💾 Guardar",
+                    "💾 Guardar Cambios",
                     key=f"save_{candidato[0]}"
                 ):
 
@@ -442,11 +416,7 @@ def candidatos_page(cursor, guardar, calcular_match):
                     ))
 
                     guardar()
-
-                    st.success(
-                        "✅ Actualizado"
-                    )
-
+                    st.success("✅ Candidato actualizado")
                     st.rerun()
 
             if st.button(
@@ -462,16 +432,10 @@ def candidatos_page(cursor, guardar, calcular_match):
                 ))
 
                 guardar()
-
                 st.rerun()
 
-            st.markdown(
-                "</div>",
-                unsafe_allow_html=True
-            )
+            st.markdown("</div>", unsafe_allow_html=True)
 
     else:
 
-        st.info(
-            "No hay candidatos registrados"
-        )
+        st.info("No hay candidatos registrados")
