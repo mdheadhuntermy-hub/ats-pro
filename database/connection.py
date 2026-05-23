@@ -121,6 +121,46 @@ def init_db():
     )
     """)
 
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS historial_candidatos(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        candidato_id INTEGER,
+        candidato TEXT,
+        accion TEXT,
+        detalle TEXT,
+        usuario TEXT,
+        fecha TEXT
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS banco_cv(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nombre TEXT,
+        correo TEXT,
+        telefono TEXT,
+        ciudad TEXT,
+        perfil TEXT,
+        area TEXT,
+        skills TEXT,
+        salario TEXT,
+        disponibilidad TEXT,
+        comentarios TEXT,
+        pdf TEXT
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS retiros(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        fecha TEXT,
+        concepto TEXT,
+        monto REAL,
+        mes TEXT,
+        observaciones TEXT
+    )
+    """)
+
     usuario_admin = cursor.execute("""
         SELECT *
         FROM usuarios
@@ -141,32 +181,5 @@ def init_db():
             "Dios2026",
             "Administrador"
         ))
-    cursor.execute("""
-CREATE TABLE IF NOT EXISTS historial_candidatos(
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    candidato_id INTEGER,
-    candidato TEXT,
-    accion TEXT,
-    detalle TEXT,
-    usuario TEXT,
-    fecha TEXT
-)
-""")
 
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS banco_cv(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nombre TEXT,
-        correo TEXT,
-        telefono TEXT,
-        ciudad TEXT,
-        perfil TEXT,
-        area TEXT,
-        skills TEXT,
-        salario TEXT,
-        disponibilidad TEXT,
-        comentarios TEXT,
-        pdf TEXT
-    )
-    """)
     conn.commit()
