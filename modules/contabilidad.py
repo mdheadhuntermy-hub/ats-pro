@@ -31,28 +31,68 @@ def contabilidad_page(cursor, guardar):
         ]
     )
 
+    # =====================================================
+    # FACTURAS
+    # =====================================================
+
     with tab1:
 
         st.subheader("Registrar Factura")
 
         cliente = st.selectbox("Cliente", lista_clientes)
-        numero_factura = st.text_input("Número de Factura")
-        fecha_factura = st.date_input("Fecha de Factura")
-        pagada = st.selectbox("Estado", ["Pendiente", "Pagada"])
-        fecha_pago = st.date_input("Fecha de Pago")
-        mes = st.selectbox("Mes", MESES)
 
-        subtotal = st.number_input("Subtotal", min_value=0.0)
-        inversion = st.number_input("Inversión", min_value=0.0)
+        numero_factura = st.text_input(
+            "Número de Factura"
+        )
+
+        fecha_factura = st.date_input(
+            "Fecha de Factura"
+        )
+
+        pagada = st.selectbox(
+            "Estado",
+            ["Pendiente", "Pagada"]
+        )
+
+        fecha_pago = st.date_input(
+            "Fecha de Pago"
+        )
+
+        mes = st.selectbox(
+            "Mes",
+            MESES
+        )
+
+        subtotal = st.number_input(
+            "Subtotal",
+            min_value=0.0
+        )
+
+        inversion = st.number_input(
+            "Inversión",
+            min_value=0.0
+        )
 
         iva = subtotal * 0.16
         total = subtotal + iva
         utilidad = subtotal - inversion
 
         c1, c2, c3 = st.columns(3)
-        c1.metric("IVA", f"${iva:,.2f}")
-        c2.metric("Total", f"${total:,.2f}")
-        c3.metric("Utilidad", f"${utilidad:,.2f}")
+
+        c1.metric(
+            "IVA",
+            f"${iva:,.2f}"
+        )
+
+        c2.metric(
+            "Total",
+            f"${total:,.2f}"
+        )
+
+        c3.metric(
+            "Utilidad",
+            f"${utilidad:,.2f}"
+        )
 
         if st.button("Guardar Factura"):
 
@@ -86,11 +126,18 @@ def contabilidad_page(cursor, guardar):
             ))
 
             guardar()
-            st.success("✅ Factura guardada")
+
+            st.success(
+                "✅ Factura guardada"
+            )
+
             st.rerun()
 
         st.divider()
-        st.subheader("📋 Historial de Facturas")
+
+        st.subheader(
+            "📋 Historial de Facturas"
+        )
 
         facturas = cursor.execute("""
             SELECT *
@@ -118,7 +165,10 @@ def contabilidad_page(cursor, guardar):
                 ]
             )
 
-            st.dataframe(df, use_container_width=True)
+            st.dataframe(
+                df,
+                use_container_width=True
+            )
 
             for factura in facturas:
 
@@ -133,15 +183,24 @@ def contabilidad_page(cursor, guardar):
                     )
 
                     guardar()
+
                     st.rerun()
 
         else:
 
-            st.info("No hay facturas registradas")
+            st.info(
+                "No hay facturas registradas"
+            )
+
+    # =====================================================
+    # RETIROS
+    # =====================================================
 
     with tab2:
 
-        st.subheader("Registrar Retiro / Egreso")
+        st.subheader(
+            "Registrar Retiro / Egreso"
+        )
 
         fecha_retiro = st.date_input(
             "Fecha del retiro",
@@ -170,7 +229,9 @@ def contabilidad_page(cursor, guardar):
             key="obs_retiro"
         )
 
-        if st.button("Guardar Retiro / Egreso"):
+        if st.button(
+            "Guardar Retiro / Egreso"
+        ):
 
             cursor.execute("""
                 INSERT INTO retiros(
@@ -190,11 +251,18 @@ def contabilidad_page(cursor, guardar):
             ))
 
             guardar()
-            st.success("✅ Retiro registrado")
+
+            st.success(
+                "✅ Retiro registrado"
+            )
+
             st.rerun()
 
         st.divider()
-        st.subheader("📋 Historial de Retiros / Egresos")
+
+        st.subheader(
+            "📋 Historial de Retiros / Egresos"
+        )
 
         retiros = cursor.execute("""
             SELECT *
@@ -216,7 +284,10 @@ def contabilidad_page(cursor, guardar):
                 ]
             )
 
-            st.dataframe(df_retiros, use_container_width=True)
+            st.dataframe(
+                df_retiros,
+                use_container_width=True
+            )
 
             for retiro in retiros:
 
@@ -231,15 +302,24 @@ def contabilidad_page(cursor, guardar):
                     )
 
                     guardar()
+
                     st.rerun()
 
         else:
 
-            st.info("No hay retiros registrados")
+            st.info(
+                "No hay retiros registrados"
+            )
+
+    # =====================================================
+    # RESUMEN
+    # =====================================================
 
     with tab3:
 
-        st.subheader("📊 Resumen Financiero")
+        st.subheader(
+            "📊 Resumen Financiero"
+        )
 
         resumen = cursor.execute("""
             SELECT
@@ -266,21 +346,66 @@ def contabilidad_page(cursor, guardar):
             FROM retiros
         """).fetchone()[0]
 
-        saldo_disponible = pagadas - total_retiros
+        inversion_total = cursor.execute("""
+            SELECT COALESCE(SUM(inversion), 0)
+            FROM facturas
+        """).fetchone()[0]
+
+        iva_total = cursor.execute("""
+            SELECT COALESCE(SUM(iva), 0)
+            FROM facturas
+        """).fetchone()[0]
+
+        utilidad_real = (
+            pagadas -
+            iva_total -
+            inversion_total
+        )
+
+        saldo_disponible = (
+            utilidad_real -
+            total_retiros
+        )
 
         c1, c2, c3 = st.columns(3)
-        c1.metric("Facturas", resumen[0])
-        c2.metric("Facturado Total", f"${resumen[1]:,.2f}")
-        c3.metric("Pendiente por Cobrar", f"${pendientes:,.2f}")
+
+        c1.metric(
+            "Facturas",
+            resumen[0]
+        )
+
+        c2.metric(
+            "Facturado Total",
+            f"${resumen[1]:,.2f}"
+        )
+
+        c3.metric(
+            "Pendiente por Cobrar",
+            f"${pendientes:,.2f}"
+        )
 
         c4, c5, c6 = st.columns(3)
-        c4.metric("Cobrado / Pagado", f"${pagadas:,.2f}")
-        c5.metric("Retiros / Egresos", f"${total_retiros:,.2f}")
-        c6.metric("Saldo Disponible", f"${saldo_disponible:,.2f}")
+
+        c4.metric(
+            "IVA Acumulado",
+            f"${iva_total:,.2f}"
+        )
+
+        c5.metric(
+            "Inversión Total",
+            f"${inversion_total:,.2f}"
+        )
+
+        c6.metric(
+            "Utilidad Disponible",
+            f"${saldo_disponible:,.2f}"
+        )
 
         st.divider()
 
-        st.subheader("📅 Resumen por Mes")
+        st.subheader(
+            "📅 Resumen por Mes"
+        )
 
         mes_filtro = st.selectbox(
             "Seleccionar mes",
@@ -316,7 +441,23 @@ def contabilidad_page(cursor, guardar):
         saldo_mes = pagado_mes - retiros_mes
 
         m1, m2, m3, m4 = st.columns(4)
-        m1.metric("Facturado Mes", f"${facturado_mes:,.2f}")
-        m2.metric("Cobrado Mes", f"${pagado_mes:,.2f}")
-        m3.metric("Retiros Mes", f"${retiros_mes:,.2f}")
-        m4.metric("Saldo Mes", f"${saldo_mes:,.2f}")
+
+        m1.metric(
+            "Facturado Mes",
+            f"${facturado_mes:,.2f}"
+        )
+
+        m2.metric(
+            "Cobrado Mes",
+            f"${pagado_mes:,.2f}"
+        )
+
+        m3.metric(
+            "Retiros Mes",
+            f"${retiros_mes:,.2f}"
+        )
+
+        m4.metric(
+            "Saldo Mes",
+            f"${saldo_mes:,.2f}"
+        )
