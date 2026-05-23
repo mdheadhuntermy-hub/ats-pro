@@ -2,7 +2,7 @@ import sqlite3
 import streamlit as st
 
 
-DB_NAME = "atspro.db"
+DB_NAME = "/data/atspro.db"
 
 
 @st.cache_resource
