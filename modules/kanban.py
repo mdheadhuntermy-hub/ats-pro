@@ -92,6 +92,9 @@ def kanban_page(cursor, guardar):
 
     st.title("📌 Pipeline Kanban")
 
+    rol = st.session_state.get("rol", "")
+    usuario = st.session_state.get("usuario", "")
+
     estados = [
         "Filtro RH",
         "Entrevista",
@@ -108,14 +111,37 @@ def kanban_page(cursor, guardar):
 
             color = color_estado(estado)
 
-            candidatos = cursor.execute("""
-                SELECT id, nombre, vacante, score
-                FROM candidatos
-                WHERE estado=?
-                ORDER BY score DESC
-            """, (
-                estado,
-            )).fetchall()
+            if rol == "RH":
+
+                candidatos = cursor.execute("""
+                    SELECT
+                        id,
+                        nombre,
+                        vacante,
+                        score
+                    FROM candidatos
+                    WHERE estado=?
+                    AND creado_por=?
+                    ORDER BY score DESC
+                """, (
+                    estado,
+                    usuario
+                )).fetchall()
+
+            else:
+
+                candidatos = cursor.execute("""
+                    SELECT
+                        id,
+                        nombre,
+                        vacante,
+                        score
+                    FROM candidatos
+                    WHERE estado=?
+                    ORDER BY score DESC
+                """, (
+                    estado,
+                )).fetchall()
 
             st.markdown(f"""
             <div style="
@@ -210,7 +236,8 @@ def kanban_page(cursor, guardar):
                                 skills,
                                 dictamen,
                                 dictamen_seguridad,
-                                dictamen_psicometrico
+                                dictamen_psicometrico,
+                                creado_por
                             FROM candidatos
                             WHERE id=?
                         """, (
@@ -233,6 +260,11 @@ def kanban_page(cursor, guardar):
 
                             st.write("🧠 Psicométrico")
                             st.text(detalle[5])
+
+                            if rol != "RH":
+                                st.caption(
+                                    f"👤 Reclutador: {detalle[6]}"
+                                )
 
                     with st.expander("🕒 Timeline"):
 

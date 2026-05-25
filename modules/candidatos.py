@@ -156,15 +156,8 @@ def guardar_archivo_pdf(archivo, carpeta):
 
 def calcular_score_profesional(calcular_match, descripcion_vacante, texto_cv, skills):
 
-    score_cv = calcular_match(
-        descripcion_vacante,
-        texto_cv
-    )
-
-    score_rh = calcular_match(
-        descripcion_vacante,
-        skills
-    )
+    score_cv = calcular_match(descripcion_vacante, texto_cv)
+    score_rh = calcular_match(descripcion_vacante, skills)
 
     texto_completo = f"""
     CV:
@@ -174,10 +167,7 @@ def calcular_score_profesional(calcular_match, descripcion_vacante, texto_cv, sk
     {skills}
     """
 
-    score_contexto = calcular_match(
-        descripcion_vacante,
-        texto_completo
-    )
+    score_contexto = calcular_match(descripcion_vacante, texto_completo)
 
     score = int(
         (score_cv * 0.40) +
@@ -185,17 +175,30 @@ def calcular_score_profesional(calcular_match, descripcion_vacante, texto_cv, sk
         (score_contexto * 0.20)
     )
 
-    score = ajustar_score_por_comentarios(
-        score,
-        skills
-    )
+    score = ajustar_score_por_comentarios(score, skills)
 
     return score
+
+
+def asegurar_columna_creado_por(cursor):
+
+    try:
+        cursor.execute("""
+            ALTER TABLE candidatos
+            ADD COLUMN creado_por TEXT
+        """)
+    except:
+        pass
 
 
 def candidatos_page(cursor, guardar, calcular_match):
 
     st.title("👥 Candidatos")
+
+    rol = st.session_state.get("rol", "")
+    usuario = st.session_state.get("usuario", "")
+
+    asegurar_columna_creado_por(cursor)
 
     nombre = st.text_input("Nombre")
     correo = st.text_input("Correo")
@@ -217,17 +220,31 @@ def candidatos_page(cursor, guardar, calcular_match):
         ]
     )
 
-    vacantes_db = cursor.execute("""
-        SELECT titulo
-        FROM vacantes
-        ORDER BY titulo
-    """).fetchall()
+    if rol == "RH":
+
+        vacantes_db = cursor.execute("""
+            SELECT titulo
+            FROM vacantes
+            WHERE creado_por=?
+            ORDER BY titulo
+        """, (
+            usuario,
+        )).fetchall()
+
+    else:
+
+        vacantes_db = cursor.execute("""
+            SELECT titulo
+            FROM vacantes
+            ORDER BY titulo
+        """).fetchall()
 
     lista_vacantes = [v[0] for v in vacantes_db]
 
     if lista_vacantes:
         vacante = st.selectbox("Vacante", lista_vacantes)
     else:
+        st.warning("No tienes vacantes asignadas.")
         vacante = ""
 
     cv_pdf = st.file_uploader("Subir CV PDF", type=["pdf"])
@@ -235,6 +252,10 @@ def candidatos_page(cursor, guardar, calcular_match):
     psicometrico_pdf = st.file_uploader("🧠 Pruebas Psicométricas PDF", type=["pdf"])
 
     if st.button("Guardar Candidato"):
+
+        if not vacante:
+            st.error("Debes seleccionar una vacante.")
+            return
 
         datos_vacante = cursor.execute("""
             SELECT descripcion
@@ -281,9 +302,10 @@ def candidatos_page(cursor, guardar, calcular_match):
                 seguridad_pdf,
                 dictamen_seguridad,
                 psicometrico_pdf,
-                dictamen_psicometrico
+                dictamen_psicometrico,
+                creado_por
             )
-            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)
+            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """, (
             nombre,
             correo,
@@ -297,7 +319,8 @@ def candidatos_page(cursor, guardar, calcular_match):
             seguridad_path,
             dictamen_seguridad,
             psicometrico_path,
-            dictamen_psicometrico
+            dictamen_psicometrico,
+            usuario
         ))
 
         guardar()
@@ -306,11 +329,24 @@ def candidatos_page(cursor, guardar, calcular_match):
 
     st.divider()
 
-    candidatos = cursor.execute("""
-        SELECT *
-        FROM candidatos
-        ORDER BY score DESC
-    """).fetchall()
+    if rol == "RH":
+
+        candidatos = cursor.execute("""
+            SELECT *
+            FROM candidatos
+            WHERE creado_por=?
+            ORDER BY score DESC
+        """, (
+            usuario,
+        )).fetchall()
+
+    else:
+
+        candidatos = cursor.execute("""
+            SELECT *
+            FROM candidatos
+            ORDER BY score DESC
+        """).fetchall()
 
     if candidatos:
 
@@ -319,6 +355,7 @@ def candidatos_page(cursor, guardar, calcular_match):
             dictamen = candidato[9] if len(candidato) > 9 else ""
             dictamen_seguridad = candidato[11] if len(candidato) > 11 else ""
             dictamen_psicometrico = candidato[13] if len(candidato) > 13 else ""
+            creado_por = candidato[14] if len(candidato) > 14 else ""
 
             st.markdown("<div class='card'>", unsafe_allow_html=True)
 
@@ -329,6 +366,9 @@ def candidatos_page(cursor, guardar, calcular_match):
             st.write(f"🎯 Match IA: {candidato[5]}%")
             st.write(f"📌 Estado: {candidato[6]}")
             st.write(f"💼 Vacante: {candidato[7]}")
+
+            if rol != "RH":
+                st.caption(f"👤 Reclutador: {creado_por}")
 
             with st.expander("🤖 Entrevista IA"):
 

@@ -2,7 +2,12 @@ import sqlite3
 import streamlit as st
 
 
-DB_NAME = "/data/atspro.db"
+import os
+
+if os.path.exists("/data"):
+    DB_NAME = "/data/atspro.db"
+else:
+    DB_NAME = "atspro.db"
 
 
 @st.cache_resource

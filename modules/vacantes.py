@@ -5,6 +5,17 @@ def vacantes_page(cursor, guardar):
 
     st.title("💼 Vacantes")
 
+    rol = st.session_state.get("rol", "")
+    usuario = st.session_state.get("usuario", "")
+
+    try:
+        cursor.execute("""
+            ALTER TABLE vacantes
+            ADD COLUMN creado_por TEXT
+        """)
+    except:
+        pass
+
     titulo = st.text_input("Título")
     salario = st.text_input("Salario")
     descripcion = st.text_area("Descripción")
@@ -15,27 +26,45 @@ def vacantes_page(cursor, guardar):
             INSERT INTO vacantes(
                 titulo,
                 salario,
-                descripcion
+                descripcion,
+                creado_por
             )
-            VALUES(?,?,?)
+            VALUES(?,?,?,?)
         """, (
             titulo,
             salario,
-            descripcion
+            descripcion,
+            usuario
         ))
 
         guardar()
+
         st.success("✅ Vacante guardada")
+
         st.rerun()
 
     st.divider()
+
     st.subheader("📋 Vacantes Registradas")
 
-    vacantes = cursor.execute("""
-        SELECT *
-        FROM vacantes
-        ORDER BY id DESC
-    """).fetchall()
+    if rol == "RH":
+
+        vacantes = cursor.execute("""
+            SELECT *
+            FROM vacantes
+            WHERE creado_por=?
+            ORDER BY id DESC
+        """, (
+            usuario,
+        )).fetchall()
+
+    else:
+
+        vacantes = cursor.execute("""
+            SELECT *
+            FROM vacantes
+            ORDER BY id DESC
+        """).fetchall()
 
     if vacantes:
 
@@ -49,6 +78,11 @@ def vacantes_page(cursor, guardar):
             st.write(f"💼 Vacante: {vacante[1]}")
             st.write(f"💰 Salario: {vacante[2]}")
             st.write(f"📝 Descripción: {vacante[3]}")
+
+            if len(vacante) > 4:
+                st.caption(
+                    f"👤 Reclutador: {vacante[4]}"
+                )
 
             with st.expander("✏️ Editar Vacante"):
 
@@ -89,7 +123,11 @@ def vacantes_page(cursor, guardar):
                     ))
 
                     guardar()
-                    st.success("✅ Vacante actualizada")
+
+                    st.success(
+                        "✅ Vacante actualizada"
+                    )
+
                     st.rerun()
 
             if st.button(
@@ -103,6 +141,7 @@ def vacantes_page(cursor, guardar):
                 )
 
                 guardar()
+
                 st.rerun()
 
             st.markdown(
