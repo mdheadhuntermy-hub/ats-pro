@@ -59,8 +59,22 @@ def contabilidad_page(cursor, guardar):
         )
 
         mes = st.selectbox(
-            "Mes",
-            MESES
+    	    "Mes",
+            [
+        	"Enero",
+        	"Febrero",
+       		"Marzo",
+        	"Abril",
+        	"Mayo",
+        	"Junio",
+        	"Julio",
+        	"Agosto",
+        	"Septiembre",
+        	"Octubre",
+        	"Noviembre",
+        	"Diciembre"
+             ]
+          
         )
 
         subtotal = st.number_input(
