@@ -152,6 +152,8 @@ def generar_pdf_propuesta(
 
     elementos.append(Spacer(1, 18))
 
+    nombre_empresa = empresa if empresa else cliente
+
     dirigido = ""
 
     if empresa and empresa.strip():
@@ -192,8 +194,11 @@ def generar_pdf_propuesta(
 
     elementos.append(
         Paragraph(
-            "Estimados, es un placer saludarle. Agradecemos la oportunidad de presentarle nuestra "
-            "propuesta de colaboración técnica para la gestión de su capital humano.",
+            f"""
+            Estimados representantes de <b>{limpiar_texto(nombre_empresa).upper()}</b>:<br/><br/>
+            Agradecemos la oportunidad de presentar nuestra propuesta comercial para apoyarlos
+            en la atracción, evaluación y selección de talento especializado.
+            """,
             texto
         )
     )
@@ -204,8 +209,6 @@ def generar_pdf_propuesta(
             seccion
         )
     )
-
-    nombre_empresa = empresa if empresa else cliente
 
     elementos.append(
         Paragraph(
@@ -261,18 +264,18 @@ def generar_pdf_propuesta(
             ],
             [
                 Paragraph("<b>Perfiles Operativos:</b> Personal de línea, auxiliares y técnicos.", texto_normal),
-                Paragraph("60%", texto_normal)
+                Paragraph("60% del salario mensual bruto", texto_normal)
             ],
             [
                 Paragraph("<b>Perfiles Administrativos:</b> Coordinaciones, analistas y mandos medios.", texto_normal),
-                Paragraph("80%", texto_normal)
+                Paragraph("80% del salario mensual bruto", texto_normal)
             ],
             [
                 Paragraph("<b>Dirección y Gerencia:</b> Liderazgo estratégico y alta dirección.", texto_normal),
-                Paragraph("100%", texto_normal)
+                Paragraph("100% del salario mensual bruto", texto_normal)
             ],
         ],
-        colWidths=[370, 100]
+        colWidths=[330, 140]
     )
 
     tabla_honorarios.setStyle(TableStyle([
@@ -287,6 +290,14 @@ def generar_pdf_propuesta(
 
     elementos.append(Spacer(1, 10))
     elementos.append(tabla_honorarios)
+
+    elementos.append(Spacer(1, 6))
+    elementos.append(
+        Paragraph(
+            "<i>* Los honorarios se calculan sobre el salario mensual bruto del candidato contratado. Precios más IVA.</i>",
+            texto_normal
+        )
+    )
 
     elementos.append(PageBreak())
 
@@ -342,62 +353,98 @@ def generar_pdf_propuesta(
         )
     )
 
-    info_servicio = []
-
-    if servicio:
-        info_servicio.append(["Servicio:", limpiar_texto(servicio)])
-
-    if perfil:
-        info_servicio.append(["Perfil / Vacante:", limpiar_texto(perfil)])
-
-    if honorarios:
-        info_servicio.append(["Honorarios:", limpiar_texto(honorarios)])
-
-    if anticipo:
-        info_servicio.append(["Anticipo:", limpiar_texto(anticipo)])
-
-    if vigencia:
-        info_servicio.append(["Vigencia:", limpiar_texto(vigencia)])
-
-    if info_servicio:
-
-        tabla_info = Table(
-            [[
-                Paragraph("<b>Nivel del servicio contratado</b>", texto_normal),
-                ""
-            ]] + [
-                [
-                    Paragraph(f"<b>{fila[0]}</b>", texto_normal),
-                    Paragraph(fila[1], texto_normal)
-                ]
-                for fila in info_servicio
-            ],
-            colWidths=[180, 290]
-        )
-
-        tabla_info.setStyle(TableStyle([
-            ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f3f4f6")),
-            ("BOX", (0, 0), (-1, -1), 0.4, colors.HexColor("#e5e7eb")),
-            ("SPAN", (0, 0), (-1, 0)),
-            ("LEFTPADDING", (0, 0), (-1, -1), 8),
-            ("RIGHTPADDING", (0, 0), (-1, -1), 8),
-            ("TOPPADDING", (0, 0), (-1, -1), 8),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
-        ]))
-
-        elementos.append(Spacer(1, 18))
-        elementos.append(tabla_info)
-
-    elementos.append(Spacer(1, 35))
+    elementos.append(Spacer(1, 12))
 
     elementos.append(
         Paragraph(
-            "_____________________________<br/>Aceptación " + limpiar_texto(nombre_empresa),
-            texto_normal
+            """
+            <b>Condiciones de pago:</b><br/>
+	    • Para iniciar el proceso de búsqueda, se requiere un anticipo equivalente al 30% de los honorarios del servicio contratado.<br/>
+	    • El 70% restante será facturado y pagadero al ingreso o contratación del candidato seleccionado.<br/>
+	    • Los honorarios se calculan sobre el salario mensual bruto del candidato contratado, de acuerdo con el nivel del perfil solicitado.<br/>
+	    • El pago deberá realizarse dentro de los 3 días naturales posteriores a la emisión de la factura, salvo acuerdo distinto por escrito.<br/>
+	    • Los precios y honorarios indicados no incluyen IVA, salvo que se especifique expresamente lo contrario.
+            """,
+            texto
         )
     )
 
-    elementos.append(Spacer(1, 35))
+    elementos.append(Spacer(1, 10))
+
+    elementos.append(
+        Paragraph(
+            """
+            <b>Exclusividad de la vacante:</b><br/>
+            La presente propuesta no implica exclusividad salvo acuerdo expreso por escrito.
+            En caso de búsqueda exclusiva, MDHEADHUNTER será el proveedor autorizado para la gestión del proceso
+            durante la vigencia acordada.
+            """,
+            texto
+        )
+    )
+
+    elementos.append(Spacer(1, 10))
+
+    elementos.append(
+        Paragraph(
+            """
+            <b>Contratación posterior de candidatos:</b><br/>
+            Si la empresa contratante incorpora a cualquier candidato presentado por MDHEADHUNTER dentro de los
+            12 meses posteriores a su presentación, se generarán los honorarios correspondientes conforme al perfil contratado.
+            """,
+            texto
+        )
+    )
+
+    elementos.append(Spacer(1, 10))
+
+    elementos.append(
+        Paragraph(
+            """
+            <b>Excepciones de garantía:</b><br/>
+            La garantía quedará sin efecto si la baja del colaborador se debe a cambios en las condiciones laborales,
+            incumplimiento de prestaciones, falta de herramientas de trabajo, modificación de salario, clima laboral desfavorable,
+            reestructura interna, cambio de jefe directo, malos tratos o causas ajenas al desempeño del candidato.
+            """,
+            texto
+        )
+    )
+
+
+    elementos.append(Spacer(1, 25))
+
+    firma_data = [
+        [
+            Paragraph("_____________________________<br/>Nombre y firma", texto_normal),
+            Paragraph("_____________________________<br/>Cargo", texto_normal)
+        ],
+        [
+            Paragraph("_____________________________<br/>Fecha de aceptación", texto_normal),
+            Paragraph("_____________________________<br/>Empresa", texto_normal)
+        ],
+    ]
+
+    tabla_firmas = Table(
+        firma_data,
+        colWidths=[235, 235]
+    )
+
+    tabla_firmas.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("TOPPADDING", (0, 0), (-1, -1), 10),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 18),
+    ]))
+
+    elementos.append(
+        Paragraph(
+            "<b>ACEPTACIÓN DE LA PROPUESTA</b>",
+            seccion
+        )
+    )
+
+    elementos.append(tabla_firmas)
+
+    elementos.append(Spacer(1, 12))
 
     elementos.append(
         Paragraph(
