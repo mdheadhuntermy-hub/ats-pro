@@ -20,6 +20,7 @@ from modules.contabilidad import contabilidad_page
 from modules.reportes import reportes_page
 from modules.configuracion import configuracion_page
 from modules.portal_cliente import portal_cliente_page
+from modules.propuestas import propuestas_page
 
 
 st.set_page_config(
@@ -168,6 +169,7 @@ if rol == "Administrador":
     opciones_menu = [
         "Dashboard",
         "Clientes",
+	"Propuestas",
         "Vacantes",
         "Candidatos",
 	"Banco CV",
@@ -214,6 +216,7 @@ else:
 iconos = {
     "Dashboard": "speedometer2",
     "Clientes": "building",
+    "Propuestas": "file-earmark-text",
     "Vacantes": "briefcase",
     "Candidatos": "people",
     "Banco CV": "folder",
@@ -299,6 +302,9 @@ elif menu == "Entrevistas":
 
 elif menu == "Contabilidad":
     contabilidad_page(cursor, guardar)
+
+elif menu == "Propuestas":
+    propuestas_page(cursor, guardar)
 
 elif menu == "Reportes":
     reportes_page(cursor)

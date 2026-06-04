@@ -186,5 +186,22 @@ def init_db():
             "Dios2026",
             "Administrador"
         ))
-
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS propuestas(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        fecha TEXT,
+        cliente TEXT,
+        contacto TEXT,
+        empresa TEXT,
+        servicio TEXT,
+        perfil TEXT,
+        honorarios TEXT,
+        anticipo TEXT,
+        garantia TEXT,
+        vigencia TEXT,
+        condiciones TEXT,
+        estado TEXT,
+        pdf TEXT
+    )
+    """)
     conn.commit()
