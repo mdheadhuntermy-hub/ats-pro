@@ -21,6 +21,7 @@ from modules.reportes import reportes_page
 from modules.configuracion import configuracion_page
 from modules.portal_cliente import portal_cliente_page
 from modules.propuestas import propuestas_page
+from modules.acuerdos_anticipo import acuerdos_anticipo_page
 
 
 st.set_page_config(
@@ -170,6 +171,7 @@ if rol == "Administrador":
         "Dashboard",
         "Clientes",
 	"Propuestas",
+	"Acuerdos Anticipo",
         "Vacantes",
         "Candidatos",
 	"Banco CV",
@@ -217,6 +219,7 @@ iconos = {
     "Dashboard": "speedometer2",
     "Clientes": "building",
     "Propuestas": "file-earmark-text",
+    "Acuerdos Anticipo": "file-earmark-check",
     "Vacantes": "briefcase",
     "Candidatos": "people",
     "Banco CV": "folder",
@@ -305,6 +308,9 @@ elif menu == "Contabilidad":
 
 elif menu == "Propuestas":
     propuestas_page(cursor, guardar)
+
+elif menu == "Acuerdos Anticipo":
+    acuerdos_anticipo_page(cursor, guardar)
 
 elif menu == "Reportes":
     reportes_page(cursor)

@@ -1,8 +1,7 @@
 import sqlite3
 import streamlit as st
-
-
 import os
+
 
 if os.path.exists("/data"):
     DB_NAME = "/data/atspro.db"
@@ -67,9 +66,12 @@ def init_db():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         titulo TEXT,
         salario TEXT,
-        descripcion TEXT
+        descripcion TEXT,
+        creado_por TEXT
     )
     """)
+
+    agregar_columna(cursor, "vacantes", "creado_por", "TEXT")
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS candidatos(
@@ -86,7 +88,8 @@ def init_db():
         seguridad_pdf TEXT,
         dictamen_seguridad TEXT,
         psicometrico_pdf TEXT,
-        dictamen_psicometrico TEXT
+        dictamen_psicometrico TEXT,
+        creado_por TEXT
     )
     """)
 
@@ -95,6 +98,7 @@ def init_db():
     agregar_columna(cursor, "candidatos", "dictamen_seguridad", "TEXT")
     agregar_columna(cursor, "candidatos", "psicometrico_pdf", "TEXT")
     agregar_columna(cursor, "candidatos", "dictamen_psicometrico", "TEXT")
+    agregar_columna(cursor, "candidatos", "creado_por", "TEXT")
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS entrevistas(
@@ -123,6 +127,17 @@ def init_db():
         total REAL,
         inversion REAL,
         utilidad REAL
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS retiros(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        fecha TEXT,
+        concepto TEXT,
+        monto REAL,
+        mes TEXT,
+        observaciones TEXT
     )
     """)
 
@@ -156,13 +171,39 @@ def init_db():
     """)
 
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS retiros(
+    CREATE TABLE IF NOT EXISTS propuestas(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         fecha TEXT,
-        concepto TEXT,
-        monto REAL,
-        mes TEXT,
-        observaciones TEXT
+        cliente TEXT,
+        contacto TEXT,
+        empresa TEXT,
+        servicio TEXT,
+        perfil TEXT,
+        honorarios TEXT,
+        anticipo TEXT,
+        garantia TEXT,
+        vigencia TEXT,
+        condiciones TEXT,
+        estado TEXT,
+        pdf TEXT
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS acuerdos_anticipo(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        fecha TEXT,
+        empresa TEXT,
+        contacto TEXT,
+        puesto TEXT,
+        vacantes INTEGER,
+        salario REAL,
+        porcentaje REAL,
+        honorarios REAL,
+        anticipo REAL,
+        iva REAL,
+        total REAL,
+        pdf TEXT
     )
     """)
 
@@ -186,22 +227,5 @@ def init_db():
             "Dios2026",
             "Administrador"
         ))
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS propuestas(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        fecha TEXT,
-        cliente TEXT,
-        contacto TEXT,
-        empresa TEXT,
-        servicio TEXT,
-        perfil TEXT,
-        honorarios TEXT,
-        anticipo TEXT,
-        garantia TEXT,
-        vigencia TEXT,
-        condiciones TEXT,
-        estado TEXT,
-        pdf TEXT
-    )
-    """)
+
     conn.commit()
