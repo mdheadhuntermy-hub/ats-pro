@@ -41,20 +41,10 @@ def contabilidad_page(cursor, guardar):
         pagada = st.selectbox("Estado", ["Pendiente", "Pagada"])
         fecha_pago = st.date_input("Fecha de Pago")
 
-        mes = st.selectbox(
-            "Mes",
-            MESES
-        )
+        mes = st.selectbox("Mes", MESES)
 
-        subtotal = st.number_input(
-            "Subtotal",
-            min_value=0.0
-        )
-
-        inversion = st.number_input(
-            "Inversión",
-            min_value=0.0
-        )
+        subtotal = st.number_input("Subtotal", min_value=0.0)
+        inversion = st.number_input("Inversión", min_value=0.0)
 
         iva = subtotal * 0.16
         total = subtotal + iva
@@ -130,12 +120,43 @@ def contabilidad_page(cursor, guardar):
                 ]
             )
 
-            st.dataframe(
-                df,
-                use_container_width=True
-            )
+            st.dataframe(df, use_container_width=True)
 
             for factura in facturas:
+
+                with st.expander(f"✏️ Editar factura {factura[2]}"):
+
+                    nuevo_estado = st.selectbox(
+                        "Estado",
+                        ["Pendiente", "Pagada"],
+                        index=0 if factura[5] == "Pendiente" else 1,
+                        key=f"estado_fact_{factura[0]}"
+                    )
+
+                    nueva_fecha_pago = st.date_input(
+                        "Fecha de pago",
+                        key=f"fecha_pago_fact_{factura[0]}"
+                    )
+
+                    if st.button(
+                        "💾 Guardar cambio",
+                        key=f"guardar_estado_fact_{factura[0]}"
+                    ):
+
+                        cursor.execute("""
+                            UPDATE facturas
+                            SET pagada=?,
+                                fecha_pago=?
+                            WHERE id=?
+                        """, (
+                            nuevo_estado,
+                            str(nueva_fecha_pago),
+                            factura[0]
+                        ))
+
+                        guardar()
+                        st.success("✅ Factura actualizada")
+                        st.rerun()
 
                 if st.button(
                     f"🗑️ Eliminar factura {factura[2]}",
@@ -231,10 +252,7 @@ def contabilidad_page(cursor, guardar):
                 ]
             )
 
-            st.dataframe(
-                df_retiros,
-                use_container_width=True
-            )
+            st.dataframe(df_retiros, use_container_width=True)
 
             for retiro in retiros:
 
@@ -294,75 +312,29 @@ def contabilidad_page(cursor, guardar):
             FROM facturas
         """).fetchone()[0]
 
-        utilidad_operativa = (
-            pagadas -
-            iva_total -
-            inversion_total
-        )
-
-        ingreso_real = (
-            pagadas -
-            iva_total
-        )
-
-        efectivo_real = (
-            ingreso_real -
-            total_retiros
-        )
+        utilidad_operativa = pagadas - iva_total - inversion_total
+        ingreso_real = pagadas - iva_total
+        efectivo_real = ingreso_real - total_retiros
 
         c1, c2, c3 = st.columns(3)
 
-        c1.metric(
-            "Facturas",
-            resumen[0]
-        )
-
-        c2.metric(
-            "Facturado Total",
-            f"${resumen[1]:,.2f}"
-        )
-
-        c3.metric(
-            "Pendiente por Cobrar",
-            f"${pendientes:,.2f}"
-        )
+        c1.metric("Facturas", resumen[0])
+        c2.metric("Facturado Total", f"${resumen[1]:,.2f}")
+        c3.metric("Pendiente por Cobrar", f"${pendientes:,.2f}")
 
         c4, c5, c6 = st.columns(3)
 
-        c4.metric(
-            "IVA Acumulado",
-            f"${iva_total:,.2f}"
-        )
-
-        c5.metric(
-            "Inversión Total",
-            f"${inversion_total:,.2f}"
-        )
-
-        c6.metric(
-            "Utilidad Operativa",
-            f"${utilidad_operativa:,.2f}"
-        )
+        c4.metric("IVA Acumulado", f"${iva_total:,.2f}")
+        c5.metric("Inversión Total", f"${inversion_total:,.2f}")
+        c6.metric("Utilidad Operativa", f"${utilidad_operativa:,.2f}")
 
         c7, c8, c9 = st.columns(3)
 
-        c7.metric(
-            "Ingreso sin IVA",
-            f"${ingreso_real:,.2f}"
-        )
-
-        c8.metric(
-            "Préstamos / Retiros",
-            f"${total_retiros:,.2f}"
-        )
-
-        c9.metric(
-            "💵 Efectivo Real Disponible",
-            f"${efectivo_real:,.2f}"
-        )
+        c7.metric("Ingreso sin IVA", f"${ingreso_real:,.2f}")
+        c8.metric("Préstamos / Retiros", f"${total_retiros:,.2f}")
+        c9.metric("💵 Efectivo Real Disponible", f"${efectivo_real:,.2f}")
 
         st.divider()
-
         st.subheader("📅 Resumen por Mes")
 
         mes_filtro = st.selectbox(
@@ -409,22 +381,7 @@ def contabilidad_page(cursor, guardar):
 
         m1, m2, m3, m4 = st.columns(4)
 
-        m1.metric(
-            "Facturado Mes",
-            f"${facturado_mes:,.2f}"
-        )
-
-        m2.metric(
-            "Cobrado sin IVA Mes",
-            f"${ingreso_mes_sin_iva:,.2f}"
-        )
-
-        m3.metric(
-            "Retiros Mes",
-            f"${retiros_mes:,.2f}"
-        )
-
-        m4.metric(
-            "Efectivo Mes",
-            f"${saldo_mes:,.2f}"
-        )
+        m1.metric("Facturado Mes", f"${facturado_mes:,.2f}")
+        m2.metric("Cobrado sin IVA Mes", f"${ingreso_mes_sin_iva:,.2f}")
+        m3.metric("Retiros Mes", f"${retiros_mes:,.2f}")
+        m4.metric("Efectivo Mes", f"${saldo_mes:,.2f}")
